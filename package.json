@@ -1,0 +1,15 @@
+{
+    "name":"stractory",
+    "main":"index.js",
+    "description":"Easily scale your project with stractory. Create named streams and specify middleware that processes them. Your middleware will be run by multiple registered workers, possibly on many machines",
+    "version":"0.1.0", 
+    "private":false,
+    "author": "spion <gorgi.kosev@gmail.com> (http://gkosev.blogspot.com)",
+    "repository" :{ 
+        "type" : "git", 
+        "url" : "http://github.com/spion/stractory.git"
+    },
+    "dependencies":{
+        "threads_a_gogo":"*"
+    }    
+}
