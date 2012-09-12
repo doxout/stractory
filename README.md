@@ -24,7 +24,7 @@ To run a stractory, create a stractory server:
 
 then from the same machine or other machines you may run stractory workers:
 
-    node --ip listenip --port listenport --registry registryip:9000
+    node lib/worker-bin.js --ip listenip --port listenport --registry registryip:9000
 
 You can use a stractory client to connect to the stractory server and create stream agents.
 
