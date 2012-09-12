@@ -1,7 +1,1 @@
-
-module.exports = function() {
-    var self = {};
-
-    var create = self.create
-
-}
+module.exports = require('./lib/stractory.js')
