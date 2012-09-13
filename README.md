@@ -26,9 +26,10 @@ used to connect to such a server
 
 The point of stractory is to distribute these agents to multiple
 machines. To do this multiple generic workers can join (register to) a 
-stractory server. When the factory is asked to create an agent, its 
-server function will run on a random worker and the returned client 
-handling function will be used to process all connections arriving to it.
+stractory server. When the factory is asked to create an agent, it will
+delegate the agent's server function to a random worker which will
+execute it. the returned client handling function will be used to 
+process all connections arriving to the agent.
 
 # Setup 
 
