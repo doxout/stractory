@@ -28,7 +28,7 @@ The point of stractory is to distribute these agents to multiple
 machines. To do this multiple generic workers can join (register to) a 
 stractory server. When the factory is asked to create an agent, it will
 delegate the agent's server function to a random worker which will
-execute it. the returned client handling function will be used to 
+execute it. The returned client handling function will be used to 
 process all connections arriving to the agent.
 
 # Setup 
@@ -39,7 +39,7 @@ To run a stractory, create a stractory server:
 
 then from the same machine or other machines you may run stractory workers:
 
-    node lib/worker-bin.js --ip listenip --port listenport --registry registryip:9000
+    node lib/worker-bin.js --ip listenip --port listenport --registry stractoryip:9000
 
 # Usage
 
