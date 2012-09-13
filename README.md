@@ -103,9 +103,22 @@ Create a dnode-based actor:
     }
     strac.create('name', dnode_transformer, function(err) { });
 
+Or use the built-in dnode agent builder function (shorter)
+
+    var dnode_transformer = stractory.dnode({replaceWith:'oo'}, function(options) {
+        // extra initialization goes here
+
+        // return the dnode object at the end.
+        return {
+            transform : function (s, cb) {
+                cb(s.replace(/[aeiou]{2,}/, options.replaceWith).toUpperCase())
+            }
+        };
+    });
+
 Notice how the options are passed to the server and client functions.
 
-When a client wrapper is specified like in the dnode example, using strac.connect
+When a client wrapper is specified like in the dnode examples, using strac.connect
 will yield the wrapped actor client instead:
 
     strac.connect('name', function(err, client) {
@@ -126,14 +139,18 @@ function body.
 
 # TODO
 
-Generic actors, e.g. generic dnode actor (generic in the sense that you will 
-be able to specify any functions):
+## DONE: Generic dnode actor
+
+(generic in the sense that you will be able to specify any functions):
 
     strac.create('custom-dnode', stractory.dnode(function(options) { 
         return {add: function(x) { return x + options.num }};
     }, {num: 5}));
     
-and a child_process.spawn based actor with its stdin and stdout streams
+
+## Spawn actor
+
+child process spawn based actor with its stdin and stdout streams
 available for input/output:
     
      // a glorified regular echo server - spawn once per client
@@ -149,8 +166,7 @@ so generic actors (such as a dnode one) will not be straightforward to write but
 once written they will be easier to use. That way the effects of the closure caveat, 
 while still relevant, will become less pronounced.
 
-Some other possible ideas to be implemented
-
+## strac.wait
     strac.wait('name', function(err, client) {
         client.write('ping');
         client.on('data', function(d) {
