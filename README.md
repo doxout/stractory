@@ -4,11 +4,11 @@ The first time you saw this wallpaper:
 
 ![node web](http://nodejs.org/images/logos/nodejs-1024x768.png)
 
-Did you think: "It would be cool if such a web of node workers was easy to set up"
+Did you think: "It would be cool if such a web of node workers was easy to set up"?
 
-Introducing stractory, the streaming server factory
+Well, it should be much easier with stractory, the streaming server factory
 
-Run stragents (stream agents, like dnode) on a pool of generic workers. 
+Stractory allows you to run stragents (stream agents, like dnode) on a pool of generic workers. 
 
 # What is a stractory server?
 
