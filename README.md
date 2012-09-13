@@ -6,21 +6,32 @@ The first time you saw this wallpaper:
 
 Did you think: "It would be cool if such a web of node workers was easy to set up"
 
-Introducing stractory, the stream factory
+Introducing stractory, the streaming server factory
 
-Run stragents (stream based agents, like dnode) on a pool of generic workers. 
+Run stragents (stream agents, like dnode) on a pool of generic workers. 
 
-# What is a stractory server
+# What is a stractory server?
 
-A stractory server is a server that acts as a stream factory. It allows creation of named
-stream-based agents with stream pairs (input and output) by telling the stractory 
-what you want. 
+A stractory server is a server that acts as a stream agent factory. 
 
-The agent is a function that takes the input and output streams. It will run on a worker, 
-attach and process data from the created input stream and answer on the 
-output stream. 
 
-# Setup  
+Stream agents are basically client-server pairs, with at least
+the function that initializes the server being defined. This server 
+initialization function returns a client-handling function 
+like the function passed to net.createServer()
+
+For example, dnode is a type of a stream agent: dnode agents consist
+of a server that handles connections and answers RPC and the client
+used to connect to such a server
+
+The point of stractory is to distribute these agents to multiple
+machines. To do this multiple generic workers can join (register to) a 
+stractory server. When the factory is asked to create an agent, its 
+server function will run on a random worker and the returned client 
+handling function will be used to process all connections arriving to it.
+
+# Setup 
+
 To run a stractory, create a stractory server:
 
     net.createServer(stractory.server()).listen(9000);
@@ -31,34 +42,38 @@ then from the same machine or other machines you may run stractory workers:
 
 # Usage
 
-Connect to the stractory and create a stream based ageint:
+Connect to the stractory and create an agent:
 
     var strac = stractory.connect({host:ip, port:port}, function(strac) {
-        strac.create('named-stream', function(istream, ostream) {
-            istream.on('data', function(d) {
-                ostream.write(d);
-            });       
+        strac.create('named-agent', function() {
+            return function(client) {
+                client.on('data', function(d) {
+                    client.write(d);
+                });       
+            };
         });
     });
 
    
-The passed function(istream, ostream) will run on a randomly picked worker. 
+The passed function() will run on a randomly picked worker. It should
+return a client handling function
 
 The previous command created a simple echo stragent, and it could be written like so:
 
-    var echo_agent = function(istream, ostream) { istream.pipe(ostream); };
+    var echo_agent = function() { return function(c) { c.pipe(c); }; };
     strac.create('mr-echo', echo_agent);    
 
-Asking the factory for the named stragent will give you the stream pair and options:
+Asking the factory for the named agent will give you a client connection to
+that agent:
 
-    strac.get('mr-echo', function(err, istream, ostream) {
-        ostream.write('Hello')
-        istream.on('data', function(data) { console.log("mr-echo said: ", data); });
+    strac.connect('mr-echo', function(err, client) {
+        client.write('Hello')
+        client.on('data', function(data) { console.log("mr-echo said: ", data); });
     });
 
 # Complex agents
 
-Echo streams are boring, and you usually want to abstract streams to something
+Echo agents are boring, and you usually want to abstract streams to something
 higher-level.
 
 Specify an agent server, an agent client wrapper and options to pass to both.
@@ -69,41 +84,40 @@ Create a dnode-based agent:
         options: {
             replaceWith:'oo'
         },
-        server: function(istream, ostream, options) {
-            var d = require('dnode')({
+        server: function(options) {
+            var d = require('dnode');
+            var srv = {
                 transform : function (s, cb) {
                     cb(s.replace(/[aeiou]{2,}/, options.replaceWith).toUpperCase())
                 }
-            });
-            istream.pipe(d).pipe(ostream);
+            };
+            return function(client) { client.pipe(dnode(srv)).pipe(client); } 
         },
-        client:function(istream, ostream, options, cb) {
+        client:function(client, options, cb) {
             var d = require('dnode')();
             d.on('remote', function(remote) {
-                cb(remote);
+                cb(null, remote);
             });
-            istream.pipe(d).pipe(ostream);
+            client.pipe(d).pipe(client);
         }
     }
-    strac.create('name', dnode_transformer, function(err) {
-        if (err) console.log("error creating stream - perhaps it already exists?"); 
-    });
+    strac.create('name', dnode_transformer, function(err) { });
 
 Notice how the options are passed to the server and client functions.
 
-When a client wrapper was specified like in the dnode example, using strac.get
-will give you the actual client - in this case the dnode client
+When a client wrapper is specified like in the dnode example, using strac.connect
+will yield the wrapped client instead:
 
-    strac.get('name', function(err, client) {
+    strac.connect('name', function(err, client) {
         client.transform('beep', function(result) {
             console.log("beep => ", result); 
             // beep => BOOP
         });
     });
 
-There is a caveat here: the client and server functions are NOT closures.
+There is a caveat here: the client wrapper and server functions are NOT closures.
 They will be transformed to strings, and the server function will be
-executed on the worker. If you want to pass any variables to them, use
+eval-ed on the worker. If you want to pass any variables to them, use
 the options object. All options must be serializable by JSON.stringify 
 
 That means e.g. that you can't simply use dnode if you've already required it,
@@ -118,11 +132,11 @@ Various stragents are planned, among which: a generic dnode stragent
     }, {num: 5}));
     
 and a child_process.spawn based agent with its stdin and stdout streams
-available.
+available for input/output.
 
 As they might need a lot of various parameters passed without closures available, 
 generic stragents (such as a dnode one) will not be straightforward to write but 
-once written they will be very easier to use. 
+once written they will be easier to use. 
 
 That way the effects of the closure caveat, while still relevant, will become
 less pronounced.
@@ -130,15 +144,15 @@ less pronounced.
 Some other possible ideas to be implemented
 (NOT YET AVIALABLE)
 
-    strac.wait('name', function(err, istream, ostream) {
-        ostream.write('ping');
-        istream.on('data', function(d) {
+    strac.wait('name', function(err, client) {
+        client.write('ping');
+        client.on('data', function(d) {
             console.log(d);
         })   
     });
 
-    strac.get([array], function(err, [array]) {})
+    strac.connect([array], function(err, [array]) {})
 
-    strac.get(/regex/, function(err, [array]) {});
+    strac.connect(/regex/, function(err, [array]) {});
     
 Have fun!

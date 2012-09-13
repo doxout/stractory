@@ -27,7 +27,9 @@ var environment = function() {
             w.registry({host: '127.0.0.1', port: startport + k}, regadr, 10);
             workers.push(ws);
         }
-        cb(regadr);
+        
+        // Allows tome time for the workers to register
+        setTimeout(function() { cb(regadr); }, 50);
     }
 
     self.teardown = function() {
@@ -41,54 +43,52 @@ var environment = function() {
     return self;
 };
 
-var echoServer = function(is, os) {
-        is.on('data', function(data) { os.write(data); });
+var echoServer = function(opt) {
+    return function(client) {
+        client.on('data', function(data) { client.write(data); });
+    }
 };
 
 var createAddingDnode = function(addamount) {
     return {
-        server: function(is, os, opt) {
-            var d = require('dnode')({
-                add: function(num, cb) {
-                    cb(opt.add + num);
-                }
-            });
-            console.log("piped");
-            is.pipe(d).pipe(os);
+        options: { add: addamount },
+        server: function(options) {
+            return function(client) {
+                var d = require('dnode')({
+                    add: function(num, cb) {
+                        cb(options.add + num);
+                    }
+                });
+                client.pipe(d).pipe(client);
+            };
         },
-        client: function(is, os, opt) {
+        client: function(client, options, cb) {
             var d = require('dnode')();
-            d.on('remote', function(err, r) {
-                console.log(r);
-                cb(err, r);
+            d.on('remote', function(r) {
+                cb(null, r);
             });
-            is.pipe(d).pipe(os);
+            client.pipe(d).pipe(client);
         },
-        options: { add: addamount }
     };
 }
 
 var env = environment();
 
-exports.nonexistant_echo = function(test) {
+exports.dnode_adder = function(test) {
     test.expect(5);
     env.setup(function(facadr) {
         stractory.client(facadr, function(err, fac) {
-            test.ok(!err, "stractory client error: " + err);            
-            fac.get('nonexistant', function(err, i, o) {
-                test.ok(err, err); 
-            });
-            fac.create('echo', echoServer, function(err) {
-                test.ok(!err, "create echo server err: " + err);
-                fac.get('echo',  function(err, i, o) {
-                    test.ok(err == null, "get echo server err:" + err);
-                    o.write("Hello");
-                    i.on('data', function(d) {
-                        test.ok(d == 'Hello', "echo server response is: " + d);
+            test.ok(!err, "stractory client err: " + err);            
+            fac.create('dnode-add', createAddingDnode(10), function(err) {
+                test.ok(!err, "create dnode-add err: " + JSON.stringify(err));
+                fac.connect('dnode-add',  function(err, cli) {
+                    test.ok(!err, "connect dnode-add err:" + err);
+                    test.ok(cli, "client is: " + cli);
+                    cli.add(5, function(res) {
+                        test.ok(res == 15, "adder server response is: " + res);
                         env.teardown();
                         test.done();
                     });
-
                 });
 
             });
@@ -96,23 +96,26 @@ exports.nonexistant_echo = function(test) {
     });
 };
 
-exports.dnode_adder = function(test) {
-    test.expect(3);
+
+exports.nonexistant_echo = function(test) {
+    test.expect(5);
     env.setup(function(facadr) {
         stractory.client(facadr, function(err, fac) {
-            console.log("stractory client", err, err == null);
-            test.ok(err == null, "stractory client error: " + err);            
-            fac.create('dnode-add', createAddingDnode(10), function(err) {
-                console.log("created dnode-add", err, err == null);
-                test.ok(err == null, "create echo server err: " + JSON.stringify(err));
-                fac.get('dnode-add',  function(err, cli) {
-                    console.log(err, cli);
-                    test.ok(err == null, "get echo server err:" + err);
-                    cli.add(5, function(res) {
-                        test.ok(res == 15, "adder server response is: " + res);
+            test.ok(!err, "stractory client err: " + err);            
+            fac.connect('nonexistant', function(err, i, o) {
+                test.ok(err, "connect nonexistant err: " + err); 
+            });
+            fac.create('echo', echoServer, function(err) {
+                test.ok(!err, "create echo server err: " + err);
+                fac.connect('echo',  function(err, cli) {
+                    test.ok(!err, "connect echo server err:" + err);
+                    cli.write("Hello");
+                    cli.on('data', function(d) {
+                        test.ok(d == 'Hello', "echo server response is: " + d);
                         env.teardown();
                         test.done();
                     });
+
                 });
 
             });
