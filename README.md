@@ -12,12 +12,15 @@ Run stragents (stream based agents, like dnode) on a pool of generic workers.
 
 # What is a stractory server
 
-A stractory server is a server that acts as a stream factory. You can create named
-stream pairs (input and output) by telling the stractory what you want. 
+A stractory server is a server that acts as a stream factory. It allows creation of named
+stream-based agents with stream pairs (input and output) by telling the stractory 
+what you want. 
 
-You can specify what agent function will run. The agent will attach and process data
-from the created input stream and answer with output on the output stream.
+The agent is a function that takes the input and output streams. It will run on a worker, 
+attach and process data from the created input stream and answer on the 
+output stream. 
 
+# Setup  
 To run a stractory, create a stractory server:
 
     net.createServer(stractory.server()).listen(9000);
@@ -26,9 +29,9 @@ then from the same machine or other machines you may run stractory workers:
 
     node lib/worker-bin.js --ip listenip --port listenport --registry registryip:9000
 
-You can use a stractory client to connect to the stractory server and create stream agents.
+# Usage
 
-Here is how that looks like:
+Connect to the stractory and create a stream based ageint:
 
     var strac = stractory.connect({host:ip, port:port}, function(strac) {
         strac.create('named-stream', function(istream, ostream) {
@@ -39,22 +42,28 @@ Here is how that looks like:
     });
 
    
-This causes named I/O streams to be created on a random worker which
-is registered to the factory server. The specified stream agent function 
-will be execute on the worker and attach to the streams. 
+The passed function(istream, ostream) will run on a randomly picked worker. 
 
 The previous command created a simple echo stragent, and it could be written like so:
 
     var echo_agent = function(istream, ostream) { istream.pipe(ostream); };
-    strac.create('named-stream', echo_agent);
+    strac.create('mr-echo', echo_agent);    
+
+Asking the factory for the named stragent will give you the stream pair and options:
+
+    strac.get('mr-echo', function(err, istream, ostream) {
+        ostream.write('Hello')
+        istream.on('data', function(data) { console.log("mr-echo said: ", data); });
+    });
+
+# Complex agents
 
 Echo streams are boring, and you usually want to abstract streams to something
-higher-level. 
+higher-level.
 
-stractory allows you a more complex specification for the agent, which allows
-you to write an agent server, an agent client wrapper and pass options to both.
+Specify an agent server, an agent client wrapper and options to pass to both.
 
-To do that, you can for example create a dnode-based agent:
+Create a dnode-based agent:
 
     var dnode_transformer = {
         options: {
@@ -80,16 +89,10 @@ To do that, you can for example create a dnode-based agent:
         if (err) console.log("error creating stream - perhaps it already exists?"); 
     });
 
-if you wish to provide a default wrapper for the client and/or pass options.
+Notice how the options are passed to the server and client functions.
 
-By default, if there is no client wrapper, asking the factory for the named
-stragent will give you the stream pair and options:
-
-    strac.get('name', function(err, istream, ostream, options) {
-    });
-
-But, if a client wrapper was specified like in the dnode example, you will
-instead obtain the real deal (the dnode client)
+When a client wrapper was specified like in the dnode example, using strac.get
+will give you the actual client - in this case the dnode client
 
     strac.get('name', function(err, client) {
         client.transform('beep', function(result) {
