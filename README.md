@@ -40,8 +40,8 @@ Here is how that looks like:
 
    
 This causes named I/O streams to be created on a random worker which
-is registered to the factory server. The specified the middleware function 
-will be attached to the streams and will execute on the worker. 
+is registered to the factory server. The specified stream agent function 
+will be execute on the worker and attach to the streams. 
 
 The previous command created a simple echo stragent, and it could be written like so:
 
@@ -56,7 +56,10 @@ you to write an agent server, an agent client wrapper and pass options to both.
 
 To do that, you can for example create a dnode-based agent:
 
-    var dnode_transformer = { 
+    var dnode_transformer = {
+        options: {
+            replaceWith:'oo'
+        },
         server: function(istream, ostream, options) {
             var d = require('dnode')({
                 transform : function (s, cb) {
@@ -71,9 +74,6 @@ To do that, you can for example create a dnode-based agent:
                 cb(remote);
             });
             istream.pipe(d).pipe(ostream);
-        },
-        options: {
-            replaceWith:'oo'
         }
     }
     strac.create('name', dnode_transformer, function(err) {
