@@ -49,7 +49,9 @@ var echoServer = function(opt) {
     }
 };
 
-var createAddingDnode = function(addamount) {
+
+
+var createAddingDnodeManual = function(addamount) {
     return {
         options: { add: addamount },
         server: function(options) {
@@ -71,15 +73,22 @@ var createAddingDnode = function(addamount) {
         },
     };
 }
+var createAddingDnode = function(add) {
+    return stractory.dnode({add: add}, function(options) {
+        return { 
+            add: function(num, cb) { cb(options.add + num); }
+        };
+    });
+}
 
 var env = environment();
 
-exports.dnode_adder = function(test) {
+var test_dnodes = function(test, dnode_tested) {
     test.expect(5);
     env.setup(function(facadr) {
         stractory.client(facadr, function(err, fac) {
             test.ok(!err, "stractory client err: " + err);            
-            fac.create('dnode-add', createAddingDnode(10), function(err) {
+            fac.create('dnode-add', dnode_tested, function(err) {
                 test.ok(!err, "create dnode-add err: " + JSON.stringify(err));
                 fac.connect('dnode-add',  function(err, cli) {
                     test.ok(!err, "connect dnode-add err:" + err);
@@ -94,7 +103,16 @@ exports.dnode_adder = function(test) {
             });
         });
     });
+}
+
+exports.dnode_adder_manual = function(test) {
+    test_dnodes(test, createAddingDnodeManual(10));
 };
+
+exports.dnode_adder_generic = function(test) {
+    test_dnodes(test, createAddingDnode(10));
+};
+
 
 
 exports.nonexistant_echo = function(test) {
