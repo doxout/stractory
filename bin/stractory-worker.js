@@ -6,9 +6,10 @@ var net = require('net'),
         .demand(['port', 'registry'])
         .describe('port', 'worker listening port')
         .describe('registry', 'ip:port or just port of the stractory (default ip 127.0.0.1)')
+        .describe('node_modules', 'extra search directories for required modules')
         .default('registerEvery', 30)
         .describe('registerEvery', 'Notify the stractory that we are here every X seconds')
-        .usage('$0 --ip listenip --port listenport --registry ip:port --registerEvery seconds')
+        .usage('$0 --ip listenip --port listenport --registry ip:port --registerEvery seconds --node_modules path1,path2,...')
         .argv;
 
 var wrkServer = worker.server(argv),

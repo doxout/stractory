@@ -106,7 +106,6 @@ var test_dnodes = function(test, dnode_tested) {
             fac.create('dnode-add', dnode_tested, function(err) {
                 test.ok(!err, "create dnode-add err: " + JSON.stringify(err));
                 fac.connect('dnode-add',  function(err, cli) {
-                    console.log(err)
                     test.ok(!err, "connect dnode-add err:" + err);
                     test.ok(cli, "client is: " + cli);
                     cli.add(5, function(res) {
@@ -131,7 +130,6 @@ exports.nonexistant_echo = function(test) {
                 test.ok(err, "connect nonexistant err: " + err); 
             });
             fac.create('echo', echoServer, function(err) {
-                console.log(err);
                 test.ok(!err, "create echo server err: " + err);
                 fac.connect('echo',  function(err, cli) {
                     test.ok(!err, "connect echo server err:" + err);
