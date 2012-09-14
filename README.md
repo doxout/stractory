@@ -31,13 +31,27 @@ process all connections arriving to the actor.
 
 # Setup 
 
+    npm install -g "git://github.com/spion/stractory"
+
 To run a stractory, create a stractory server:
 
-    net.createServer(stractory.server()).listen(9000);
+    stractory.js --port 9000
 
-then from the same machine or other machines you may run stractory workers:
+then from the same machine you may run stractory workers:
 
-    node lib/worker-bin.js --ip listenip --port listenport --registry stractoryip:9000
+    stractory-worker.js --port 9001 --registry 9000
+
+or you can also run them from other machines
+
+    stractory-worker.js --port 9001 --registry stractory_ip:9000
+
+By default, modules will be loaded from process.cwd()/node\_modules.
+Additionally you can specify require search paths (extra node modules dirs)
+
+    stractory-worker.js --port 9001 --registry 9000 --node_modules path/to/node_modules
+
+(make sure every worker has a separate ip/port combination)
+
 
 # Usage
 
@@ -55,7 +69,10 @@ Connect to the stractory and create an actor:
 
    
 The passed function() is an actor server initialization function. It will run on a randomly 
-picked worker. It should return a client handling function, like the one passed to 
+picked worker.  This function is not a closure; variables from the outside scope of this 
+function will be undefined when its run on the worker.
+
+The initialization function  should return a client handling function, like the one passed to 
 net.createServer()
 
 The previous command created a simple echo actor, and it could be written like so:
@@ -67,7 +84,7 @@ Asking the factory for the named actor will give you a client connection to
 that actor:
 
     strac.connect('mr-echo', function(err, client) {
-        client.write('Hello')
+        client.write('Hello');
         client.on('data', function(data) { console.log("mr-echo said: ", data); });
     });
 
@@ -106,9 +123,6 @@ Create a dnode-based actor:
 Or use the built-in dnode agent builder function (shorter)
 
     var dnode_transformer = stractory.dnode({replaceWith:'oo'}, function(options) {
-        // extra initialization goes here
-
-        // return the dnode object at the end.
         return {
             transform : function (s, cb) {
                 cb(s.replace(/[aeiou]{2,}/, options.replaceWith).toUpperCase())
@@ -116,7 +130,9 @@ Or use the built-in dnode agent builder function (shorter)
         };
     });
 
-Notice how the options are passed to the server and client functions.
+    strac.create('name', dnode_transformer, function(err) { });
+
+Notice how the options are passed to the server function.
 
 When a client wrapper is specified like in the dnode examples, using strac.connect
 will yield the wrapped actor client instead:
