@@ -8,7 +8,7 @@
     "bin": {
         "stractory.js": './bin/stractory.js',
         "stractory-worker.js": './bin/stractory-worker.js'
-    }
+    },
     "repository" :{ 
         "type" : "git", 
         "url" : "http://github.com/spion/stractory.git"
