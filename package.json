@@ -1,7 +1,7 @@
 {
     "name":"stractory",
     "main":"index.js",
-    "description":"Easily scale your project with stractory. Create named streams and specify middleware that processes them. Your middleware will be run by multiple registered workers, possibly on many machines",
+    "description":"Scale your project easily. Create stream-based actors (like dnode) that will be run by generic workers on one or many machines.",
     "version":"0.1.0", 
     "private":false,
     "author": "spion <gorgi.kosev@gmail.com> (http://gkosev.blogspot.com)",
@@ -13,6 +13,7 @@
         "threads_a_gogo":"git://github.com/SamJBarney/node-threads.git",
         "dnode":"1.0.1",
         "through":"1.0.0",
+        "resolve":"0.2.3",
         "optimist":"0.3.4"
     }    
 }

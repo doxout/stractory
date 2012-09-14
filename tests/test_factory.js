@@ -55,8 +55,9 @@ var createAddingDnodeManual = function(addamount) {
     return {
         options: { add: addamount },
         server: function(options) {
+            var dnode = require('dnode');
             return function(client) {
-                var d = require('dnode')({
+                var d = dnode({
                     add: function(num, cb) {
                         cb(options.add + num);
                     }
@@ -81,7 +82,21 @@ var createAddingDnode = function(add) {
     });
 }
 
+
+var people_tracking_actor = stractory.dnode({}, function() {
+    var people = {};
+    return {
+        join: function(person) { people[person] = true; },
+        part: function(person) { if (people[person]) delete people[person]; },
+        list: function(callback) { callback(people); }
+    }
+});
+
+
+
+
 var env = environment();
+
 
 var test_dnodes = function(test, dnode_tested) {
     test.expect(5);
@@ -91,6 +106,7 @@ var test_dnodes = function(test, dnode_tested) {
             fac.create('dnode-add', dnode_tested, function(err) {
                 test.ok(!err, "create dnode-add err: " + JSON.stringify(err));
                 fac.connect('dnode-add',  function(err, cli) {
+                    console.log(err)
                     test.ok(!err, "connect dnode-add err:" + err);
                     test.ok(cli, "client is: " + cli);
                     cli.add(5, function(res) {
@@ -105,15 +121,6 @@ var test_dnodes = function(test, dnode_tested) {
     });
 }
 
-exports.dnode_adder_manual = function(test) {
-    test_dnodes(test, createAddingDnodeManual(10));
-};
-
-exports.dnode_adder_generic = function(test) {
-    test_dnodes(test, createAddingDnode(10));
-};
-
-
 
 exports.nonexistant_echo = function(test) {
     test.expect(5);
@@ -124,6 +131,7 @@ exports.nonexistant_echo = function(test) {
                 test.ok(err, "connect nonexistant err: " + err); 
             });
             fac.create('echo', echoServer, function(err) {
+                console.log(err);
                 test.ok(!err, "create echo server err: " + err);
                 fac.connect('echo',  function(err, cli) {
                     test.ok(!err, "connect echo server err:" + err);
@@ -141,4 +149,34 @@ exports.nonexistant_echo = function(test) {
     });
 };
 
+
+
+exports.dnode_adder_manual = function(test) {
+    test_dnodes(test, createAddingDnodeManual(10));
+};
+
+exports.dnode_adder_generic = function(test) {
+    test_dnodes(test, createAddingDnode(10));
+};
+
+
+
+exports.test_dnode_complex = function(test) {
+    test.expect(1);
+    env.setup(function(facadr) {
+        stractory.client(facadr, function(err, fac) {
+            fac.create("room", people_tracking_actor, function(err) {
+                fac.connect("room", function(err, cli) {
+                    cli.join("dude");
+                    cli.join("dudette");
+                    cli.list(function(people) {
+                        test.ok(people['dude'], "people.dude = " + people['dude']);
+                        env.teardown();
+                        test.done();
+                    });
+                });
+            });
+        });
+    });
+};
 
