@@ -57,7 +57,7 @@ Additionally you can specify require search paths (extra node modules dirs)
 
 Connect to the stractory and create an actor:
 
-    var strac = stractory.connect({host:ip, port:port}, function(strac) {
+    var strac = stractory.client({host:ip, port:port}, function(strac) {
         strac.create('named-actor', function() {
             return function(client) {
                 client.on('data', function(d) {
