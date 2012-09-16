@@ -6,8 +6,8 @@
     "private":false,
     "author": "spion <gorgi.kosev@gmail.com> (http://gkosev.blogspot.com)",
     "bin": {
-        "stractory.js": "./bin/stractory.js",
-        "stractory-worker.js": "./bin/stractory-worker.js"
+        "stractory": "./bin/stractory.js",
+        "stractory-worker": "./bin/stractory-worker.js"
     },
     "repository" :{ 
         "type" : "git", 
