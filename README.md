@@ -31,26 +31,27 @@ process all connections arriving to the actor.
 
 # Setup 
 
-    npm install -g "git://github.com/spion/stractory"
+    sudo npm install -g "git://github.com/spion/stractory"
 
 To run a stractory, create a stractory server:
 
-    stractory.js --port 9000
+    stractory --port 9000
 
 then from the same machine you may run stractory workers:
 
-    stractory-worker.js --port 9001 --registry 9000
+    stractory-worker --port 9001 --registry 9000
 
 or you can also run them from other machines
 
-    stractory-worker.js --port 9001 --registry stractory_ip:9000
+    stractory-worker --port 9001 --registry stractory_ip:9000
+
+(make sure every worker has a separate ip/port combination)
 
 By default, modules will be loaded from process.cwd()/node\_modules.
 Additionally you can specify require search paths (extra node modules dirs)
 
-    stractory-worker.js --port 9001 --registry 9000 --node_modules path/to/node_modules
+    stractory-worker --port 9001 --registry 9000 --node_modules path/to/node_modules
 
-(make sure every worker has a separate ip/port combination)
 
 
 # Usage
@@ -120,7 +121,7 @@ Create a dnode-based actor:
     }
     strac.create('name', dnode_transformer, function(err) { });
 
-Or use the built-in dnode agent builder function (shorter)
+Or use the built-in dnode agent builder function (shorter and safer)
 
     var dnode_transformer = stractory.dnode({replaceWith:'oo'}, function(options) {
         return {
@@ -155,15 +156,6 @@ function body.
 
 # TODO
 
-## DONE: Generic dnode actor
-
-(generic in the sense that you will be able to specify any functions):
-
-    strac.create('custom-dnode', stractory.dnode(function(options) { 
-        return {add: function(x) { return x + options.num }};
-    }, {num: 5}));
-    
-
 ## Spawn actor
 
 child process spawn based actor with its stdin and stdout streams
@@ -182,7 +174,8 @@ so generic actors (such as a dnode one) will not be straightforward to write but
 once written they will be easier to use. That way the effects of the closure caveat, 
 while still relevant, will become less pronounced.
 
-## strac.wait
+## Other stractory client functions:
+ 
     strac.wait('name', function(err, client) {
         client.write('ping');
         client.on('data', function(d) {
