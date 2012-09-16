@@ -12,7 +12,8 @@ var environment = function() {
     var workers  = [];
     var stracserv = null;
 
-    self.setup = function(cb) {
+        
+    self.setup = function(cb, numworkers, workopt) {
     
         var startport = 9000;
 
@@ -20,8 +21,9 @@ var environment = function() {
         stracserv = net.createServer(strac);
         stracserv.listen(startport);
         var regadr = { host: '127.0.0.1', port: startport };
-        for (var k = 1; k < 5; ++k) {
-            var w = worker.server();
+        
+        for (var k = 1; k < numworkers + 1; ++k) {
+            var w = worker.server(workopt);
             var ws = net.createServer(w);
             ws.listen(startport + k);
             w.registry({host: '127.0.0.1', port: startport + k}, regadr, 10);
@@ -29,13 +31,75 @@ var environment = function() {
         }
         
         // Allows tome time for the workers to register
-        setTimeout(function() { cb(regadr); }, 50);
+        setTimeout(function() { cb(regadr); }, 30);
     }
 
     self.teardown = function() {
         stracserv.close();
+
         for (var k = 0; k < workers.length; ++k) {
             workers[k].close();
+        }
+        workers = [];
+    }
+
+    return self;
+};
+
+
+var environment = function(opt) {
+    
+    var self = {};
+
+    var workers  = [];
+    var stracserv = null;
+
+    var cproc = require('child_process');
+        
+    self.setup = function(cb, numworkers, workopt) {
+    
+        var startport = 9000;
+
+        var strac = stractory.server({registerTimeout: 25});
+        stracserv = net.createServer(strac);
+        stracserv.listen(startport);
+        var regadr = { host: '127.0.0.1', port: startport };
+        
+        for (var k = 1; k < numworkers + 1; ++k) {
+            if (opt && opt.spawn) {
+                var worker_script = require('path').resolve(__dirname + '/../bin/stractory-worker.js');
+                var ws = cproc.spawn(worker_script ,
+                        [
+                        '--port', startport + k, 
+                        '--registry', regadr.host + ':' + regadr.port,
+                        '--registerEvery', 10]);
+                workers.push(ws);
+
+            } else {
+                var w = worker.server(workopt);
+                var ws = net.createServer(w);
+                ws.listen(startport + k);
+                w.registry({host: '127.0.0.1', port: startport + k}, regadr, 10);           
+                workers.push(ws);
+
+            }
+        }
+        
+        // Allows tome time for the workers to register
+        var waitTime;
+        if (opt && opt.spawn) waitTime = 50 + 150 * numworkers;
+        else waitTime = 30;
+        setTimeout(function() { cb(regadr); }, waitTime);
+    }
+
+    self.teardown = function() {
+        stracserv.close();
+
+        for (var k = 0; k < workers.length; ++k) {
+            if (opt && opt.spawn) {
+                workers[k].kill('SIGKILL');
+            }
+            else workers[k].close(); 
         }
         workers = [];
     }
@@ -88,7 +152,8 @@ var people_tracking_actor = stractory.dnode({}, function() {
     return {
         join: function(person) { people[person] = true; },
         part: function(person) { if (people[person]) delete people[person]; },
-        list: function(callback) { callback(people); }
+        list: function(callback) { callback(people); },
+        test: function(callback) { callback(); }
     }
 });
 
@@ -117,7 +182,7 @@ var test_dnodes = function(test, dnode_tested) {
 
             });
         });
-    });
+    }, 1);
 }
 
 
@@ -130,9 +195,11 @@ exports.nonexistant_echo = function(test) {
                 test.ok(err, "connect nonexistant err: " + err); 
             });
             fac.create('echo', echoServer, function(err) {
+                if (err) console.error(err);
                 test.ok(!err, "create echo server err: " + err);
                 fac.connect('echo',  function(err, cli) {
                     test.ok(!err, "connect echo server err:" + err);
+                    if (err) console.log(err);
                     cli.write("Hello");
                     cli.on('data', function(d) {
                         test.ok(d == 'Hello', "echo server response is: " + d);
@@ -144,7 +211,7 @@ exports.nonexistant_echo = function(test) {
 
             });
         });
-    });
+    }, 1);
 };
 
 
@@ -175,6 +242,46 @@ exports.test_dnode_complex = function(test) {
                 });
             });
         });
-    });
+    }, 4); 
 };
+
+
+exports.test_performance = function(test) {
+    test.expect(3);
+
+    var spawnenv = environment({spawn: true});
+    spawnenv.setup(function(facadr) {
+        stractory.client(facadr, function(err, fac) {
+            var rooms = 500;
+
+            var resumeAfter = function(n, cb) {
+                var alldata = [];
+                return function(err, data) { alldata.push(data); if (--n <= 0) cb(alldata); };
+            };
+            var ts = new Date().getTime();
+            var r1 = resumeAfter(rooms, function() {
+                var t = new Date().getTime();
+                var perCreate = (t - ts) / rooms;
+                test.ok(perCreate < 10, "avg create time " + perCreate.toFixed(2) + " ms");
+                var r2 = resumeAfter(rooms, function(allrooms) {
+                    var tm = new Date().getTime();
+                    var perConnect = (tm - t) / rooms;
+                    test.ok(perConnect < 10, "avg connect time " + perConnect.toFixed(2) + " ms");
+                    var r3 = resumeAfter(rooms, function() {
+                        var perMsg = (new Date().getTime() - tm) / rooms;
+                        test.ok(perMsg < 10, "avg dnode msg time " + perMsg.toFixed(2) + " ms");
+                        spawnenv.teardown();
+                        test.done();
+                    });
+                    allrooms.forEach(function(r) { r.test(r3); }); 
+                });
+                for (var k = 0; k < rooms; ++k) fac.connect("room" + k, r2);
+            })
+            for (var k = 0; k < rooms; ++k)
+                fac.create("room" + k, people_tracking_actor, r1);
+            
+
+        });
+    }, 4); 
+}
 
