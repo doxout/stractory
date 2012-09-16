@@ -14,7 +14,6 @@
         "url" : "http://github.com/spion/stractory.git"
     },
     "dependencies":{
-        "threads_a_gogo":"git://github.com/SamJBarney/node-threads.git",
         "dnode":"1.0.1",
         "through":"1.0.0",
         "resolve":"0.2.3",
