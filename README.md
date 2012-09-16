@@ -176,12 +176,20 @@ while still relevant, will become less pronounced.
 
 ## Other stractory client functions:
  
+### Wait until an actor appears
+
     strac.wait('name', function(err, client) {
         client.write('ping');
         client.on('data', function(d) {
             console.log(d);
         })   
     });
+
+### Get a client from cache if possible
+
+    strac.get('name', function(err, client) { });
+
+### Support for array and regex arguments
 
     strac.connect([array], function(err, [array]) {})
 
