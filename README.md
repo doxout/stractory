@@ -14,7 +14,7 @@ Stractory allows you to run stream actors (like dnode) on a pool of generic work
 
 A stractory server allows you to create stream actors.
 
-Stream actors consist of:
+Stream actors are basically lightweight services. They consist of:
 - a stream server with a protocol
 - an optional client that abstracts the protocol
 
