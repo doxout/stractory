@@ -36,7 +36,9 @@ process all connections arriving to the actor.
   <th></th><th>stractory</th><th>hook.io</th>
 </tr>
 <tr>
-  <td>protocol</td><td>simple stream, use any protocol: event emitter, dnode, binary, ...</td><td>predefined, event emitter</td>
+  <td>protocol and client</td>
+  <td>simple stream, use any protocol: event emitter, dnode, binary, ...</td>
+  <td>predefined, JSON based, event emitter.</td>
 </tr>
 <tr>
   <td>I/O</td><td>most I/O is between workers</td><td>all I/O routed through a single hook</td>
