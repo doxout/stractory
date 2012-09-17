@@ -34,6 +34,7 @@ process all connections arriving to the actor.
 stractory VS hook.io:
 
 * simpler lower level streams with protocol VS event emitters. 
+    * you can easily build event-emitter actors on top of stractory, if you need them.
     * stractory is simpler to extend with less overhead, especially for binary protocols.
 * most I/O (except create/destroy) is between workers vs all I/O routed through a single hook
     * stractory should be much faster with a large number of workers
