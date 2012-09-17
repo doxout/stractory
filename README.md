@@ -31,17 +31,41 @@ process all connections arriving to the actor.
 
 # How is this different than [hook.io](http://github.com/hookio/hook.io)?
 
-stractory VS hook.io
-
-* simpler lower level streams with protocol VS event emitters. 
+<table>
+<tr>
+  <th></th><th>stractory</th><th>hook.io</th><th></th>
+</tr>
+<tr>
+  <td>protocol</td><td>actors: simple stream + protocol</td><td>event emitter</td>
+  <td>
     * you can easily build event-emitter actors on top of stractory, if you need them.
     * stractory is simpler to extend with less overhead, especially for binary protocols.
-* most I/O (except create/destroy) is between workers vs all I/O routed through a single hook
+  </td>
+</tr>
+<tr>
+  <td>I/O</td><td>most I/O is between workers</td><td>all I/O routed through a single hook</td>
+  <td>
     * stractory should be much faster with a large number of workers
-* no automatic discovery VS automatic discovery using mdns
-* autoassign actors to workers VS manually deciding which hook to run on which process on which machine
-* simple connect and get by actor name VS fancy wildcard messaging
-    * fancier ways to get multiple actors comming soon.
+  </td>
+</tr>
+<tr>
+  <td>automatic discovery</td><td>none</td><td>mdns</td><td></td>
+</tr>
+<tr>
+  <td>management</td>
+  <td>autoassign actor to worker, deploy modules manually</td>
+  <td>manually decide which and how many hook to run on which process on which machine, then manually set all that up</td>
+  <td></td>
+</tr>
+<tr>
+  <td>connection</td>
+  <td>simple connect/get actor by name</td>
+  <td>fancy wildcard messaging</td>
+  <td>
+    * fancier ways to get multiple actors comming soon
+  </td>
+</tr>
+</table>
 
 # Setup 
 
