@@ -37,8 +37,8 @@ process all connections arriving to the actor.
 </tr>
 <tr>
   <td>protocol and client</td>
-  <td>simple stream, use any protocol: event emitter, dnode, binary, ...</td>
-  <td>predefined, JSON based, event emitter.</td>
+  <td>simple stream, use any protocol / client: event emitter, dnode, binary, ...</td>
+  <td>JSON based protocol, event emitter client.</td>
 </tr>
 <tr>
   <td>I/O</td><td>most I/O is between workers</td><td>all I/O routed through a single hook</td>
