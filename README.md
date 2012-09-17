@@ -33,23 +33,16 @@ process all connections arriving to the actor.
 
 <table>
 <tr>
-  <th></th><th>stractory</th><th>hook.io</th><th></th>
+  <th></th><th>stractory</th><th>hook.io</th>
 </tr>
 <tr>
-  <td>protocol</td><td>actors: simple stream + protocol</td><td>event emitter</td>
-  <td>
-    easily build event-emitter actors on top of stractory,
-    simpler to extend with less overhead for binary protocols.
-  </td>
+  <td>protocol</td><td>simple stream, use any protocol: event emitter, dnode, binary, ...</td><td>predefined, event emitter</td>
 </tr>
 <tr>
   <td>I/O</td><td>most I/O is between workers</td><td>all I/O routed through a single hook</td>
-  <td>
-    stractory should be much faster
-  </td>
 </tr>
 <tr>
-  <td>automatic discovery</td><td>none</td><td>mdns</td><td></td>
+  <td>auto discovery</td><td>none</td><td>mdns</td><td></td>
 </tr>
 <tr>
   <td>management</td>
@@ -58,12 +51,9 @@ process all connections arriving to the actor.
   <td></td>
 </tr>
 <tr>
-  <td>connection</td>
-  <td>simple connect/get actor by name</td>
-  <td>fancy wildcard messaging</td>
-  <td>
-    * fancier ways to get multiple actors comming soon
-  </td>
+  <td>address multiple actors</td>
+  <td>n/a: simple connect/get actor by name (but more comming soon)</td>
+  <td>powerful wildcard messaging</td>
 </tr>
 </table>
 
