@@ -42,7 +42,7 @@ process all connections arriving to the actor.
   <td>I/O</td><td>most I/O is between workers</td><td>all I/O routed through a single hook</td>
 </tr>
 <tr>
-  <td>auto discovery</td><td>none</td><td>mdns</td><td></td>
+  <td>auto discovery</td><td>none</td><td>mdns</td>
 </tr>
 <tr>
   <td>management</td>
