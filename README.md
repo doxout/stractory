@@ -29,9 +29,9 @@ delegate the actor's server function to a random worker which will
 execute it. The returned client-handling function will be used to 
 process all connections arriving to the actor.
 
-# How is this different than hook.io ?
+# How is this different than [hook.io](http://github.com/hookio/hook.io)?
 
-stractory VS hook.io:
+stractory VS hook.io
 
 * simpler lower level streams with protocol VS event emitters. 
     * you can easily build event-emitter actors on top of stractory, if you need them.
@@ -61,7 +61,7 @@ or you can also run them from other machines
 
 (make sure every worker has a separate ip/port combination)
 
-By default, modules will be loaded from `process.cwd()/node\_modules`.
+By default, modules will be loaded from `process.cwd()/node_modules`.
 Additionally you can specify require search paths (extra node modules dirs)
 
     stractory-worker --port 9001 --registry 9000 --node_modules path/to/node_modules
@@ -106,10 +106,10 @@ Or you can reuse an existing connection:
 
     strac.get('mr-echo', function(err, client) { client.write("hi"); });
 
-`get` connects to the actor if required, otherwise returns the last cached client.
+`get(name cb)` connects to the actor if required, otherwise returns the last cached client.
 This is faster and much more resource-friendly than creating a new connection every 
-time.
-
+time, but it might not work for some types of actors that require a new connection
+for every client or use. RPC clients like dnode will work fine.
 
 # Complex actors
 
@@ -190,11 +190,11 @@ This is a child process spawn based actor with its stdin and stdout streams
 available for input/output:
 
     // a glorified 'multicast' echo server - spawn once and pipe to all clients 
-    strac.create('custom-process', stractory.spawn('cat'), function(client, cb) { cb(null, client); }); 
+    strac.create('custom-process', stractory.spawn('cat'), smart_client) 
 
 The third argument is an optional "smarter" client.
 
-Possible uses include audio and video stream encoders
+Possible uses include audio and video stream encoders.
 
 
 # Roadmap (TODO)
@@ -209,7 +209,6 @@ Queue stractory requests until a connection is estabilished.
     });
    
 ## Other stractory client functions:
-
 
 ### Wait until an actor appears
 
