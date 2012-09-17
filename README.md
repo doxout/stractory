@@ -29,6 +29,19 @@ delegate the actor's server function to a random worker which will
 execute it. The returned client-handling function will be used to 
 process all connections arriving to the actor.
 
+# How is this different than hook.io ?
+
+stractory VS hook.io:
+
+* simpler lower level streams with protocol VS event emitters. 
+    * stractory is simpler to extend with less overhead, especially for binary protocols.
+* most I/O (except create/destroy) is between workers vs all I/O routed through a single hook
+    * stractory should be much faster with a large number of workers
+* no automatic discovery VS automatic discovery using mdns
+* autoassign actors to workers VS manually deciding which hook to run on which process on which machine
+* simple connect and get by actor name VS fancy wildcard messaging
+    * fancier ways to get multiple actors comming soon.
+
 # Setup 
 
     sudo npm install -g "git://github.com/spion/stractory"
@@ -181,6 +194,7 @@ available for input/output:
 The third argument is an optional "smarter" client.
 
 Possible uses include audio and video stream encoders
+
 
 # Roadmap (TODO)
 
