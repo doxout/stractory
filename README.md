@@ -48,7 +48,6 @@ process all connections arriving to the actor.
   <td>management</td>
   <td>autoassign actor to worker, deploy modules manually</td>
   <td>manually decide which and how many hook to run on which process on which machine, then manually set all that up</td>
-  <td></td>
 </tr>
 <tr>
   <td>address multiple actors</td>
