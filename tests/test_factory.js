@@ -73,6 +73,7 @@ var environment = function(opt) {
                         '--port', startport + k, 
                         '--registry', regadr.host + ':' + regadr.port,
                         '--registerEvery', 10]);
+                ws.stdout.pipe(process.stdout);
                 workers.push(ws);
 
             } else {
@@ -113,31 +114,6 @@ var echoServer = function(opt) {
     }
 };
 
-
-
-var createAddingDnodeManual = function(addamount) {
-    return {
-        options: { add: addamount },
-        server: function(options) {
-            var dnode = require('dnode');
-            return function(client) {
-                var d = dnode({
-                    add: function(num, cb) {
-                        cb(options.add + num);
-                    }
-                });
-                client.pipe(d).pipe(client);
-            };
-        },
-        client: function(client, options, cb) {
-            var d = require('dnode')();
-            d.on('remote', function(r) {
-                cb(null, r);
-            });
-            client.pipe(d).pipe(client);
-        },
-    };
-}
 var createAddingDnode = function(add) {
     return stractory.dnode({add: add}, function(options) {
         return { 
@@ -216,10 +192,6 @@ exports.nonexistant_echo = function(test) {
 
 
 
-exports.dnode_adder_manual = function(test) {
-    test_dnodes(test, createAddingDnodeManual(10));
-};
-
 exports.dnode_adder_generic = function(test) {
     test_dnodes(test, createAddingDnode(10));
 };
@@ -245,6 +217,29 @@ exports.test_dnode_complex = function(test) {
     }, 4); 
 };
 
+exports.test_spawn = function(test) {
+    test.expect(4);
+    env.setup(function(facadr) {
+        stractory.client(facadr, function(err, fac) {
+            fac.create('cat', stractory.spawn('cat'), function(err) {
+                test.ok(!err, 'create spawn cat');
+                fac.connect('cat', function(err, c1) {
+                    test.ok(!err, 'connect to cat 1 ' + err);
+                    fac.connect('cat', function(err, c2) {
+                        test.ok(!err, 'connect to cat 2 ' + err);
+                        c2.write('cat');
+                        c1.on('data', function(d) {
+                            test.ok('cat' == d, 'cat data received ' + d);
+                            env.teardown();
+                            test.done(); 
+                        });
+                    });
+                });
+            });
+        });
+    }, 2);
+}
+
 
 exports.test_performance = function(test) {
     test.expect(3);
@@ -256,20 +251,21 @@ exports.test_performance = function(test) {
 
             var resumeAfter = function(n, cb) {
                 var alldata = [];
-                return function(err, data) { alldata.push(data); if (--n <= 0) cb(alldata); };
+                return function(err, data) {
+                    alldata.push(data); if (--n <= 0) cb(alldata); };
             };
             var ts = new Date().getTime();
             var r1 = resumeAfter(rooms, function() {
                 var t = new Date().getTime();
                 var perCreate = (t - ts) / rooms;
-                test.ok(perCreate < 10, "avg create time " + perCreate.toFixed(2) + " ms");
+                test.ok(perCreate < 25, "avg create time " + perCreate.toFixed(2) + " ms");
                 var r2 = resumeAfter(rooms, function(allrooms) {
                     var tm = new Date().getTime();
                     var perConnect = (tm - t) / rooms;
-                    test.ok(perConnect < 10, "avg connect time " + perConnect.toFixed(2) + " ms");
+                    test.ok(perConnect < 15, "avg connect time " + perConnect.toFixed(2) + " ms");
                     var r3 = resumeAfter(rooms, function() {
                         var perMsg = (new Date().getTime() - tm) / rooms;
-                        test.ok(perMsg < 10, "avg dnode msg time " + perMsg.toFixed(2) + " ms");
+                        test.ok(perMsg < 2, "avg dnode msg time " + perMsg.toFixed(2) + " ms");
                         spawnenv.teardown();
                         test.done();
                     });

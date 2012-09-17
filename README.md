@@ -1,8 +1,8 @@
 # Introduction
 
-The first time you saw this wallpaper:
-
 ![node web](http://nodejs.org/images/logos/nodejs-1024x768.png)
+
+Remember this wallpaper?
 
 Did you think: "It would be cool if such a web of node workers was easy to set up"?
 
@@ -47,11 +47,10 @@ or you can also run them from other machines
 
 (make sure every worker has a separate ip/port combination)
 
-By default, modules will be loaded from process.cwd()/node\_modules.
+By default, modules will be loaded from `process.cwd()/node\_modules`.
 Additionally you can specify require search paths (extra node modules dirs)
 
     stractory-worker --port 9001 --registry 9000 --node_modules path/to/node_modules
-
 
 
 # Usage
@@ -69,25 +68,34 @@ Connect to the stractory and create an actor:
     });
 
    
-The passed function() is an actor server initialization function. It will run on a randomly 
+The passed function is an actor server initialization function. It will run on a randomly 
 picked worker.  This function is not a closure; variables from the outside scope of this 
 function will be undefined when its run on the worker.
 
 The initialization function  should return a client handling function, like the one passed to 
-net.createServer()
+`net.createServer()`
 
 The previous command created a simple echo actor, and it could be written like so:
 
     var echo_actor = function() { return function(c) { c.pipe(c); }; };
     strac.create('mr-echo', echo_actor);    
 
-Asking the factory for the named actor will give you a client connection to
+Asking the factory for the named actor will give you a new client connection to
 that actor:
 
     strac.connect('mr-echo', function(err, client) {
         client.write('Hello');
         client.on('data', function(data) { console.log("mr-echo said: ", data); });
     });
+
+Or you can reuse an existing connection:
+
+    strac.get('mr-echo', function(err, client) { client.write("hi"); });
+
+`get` connects to the actor if required, otherwise returns the last cached client.
+This is faster and much more resource-friendly than creating a new connection every 
+time.
+
 
 # Complex actors
 
@@ -111,7 +119,7 @@ Create a dnode-based actor:
             };
             return function(client) { client.pipe(dnode(srv)).pipe(client); } 
         },
-        client:function(client, options, cb) {
+        client:function(client, cb) {
             var d = require('dnode')();
             d.on('remote', function(remote) {
                 cb(null, remote);
@@ -135,47 +143,59 @@ Or use the built-in dnode agent builder function (shorter and safer)
 
 Notice how the options are passed to the server function.
 
-When a client wrapper is specified like in the dnode examples, using strac.connect
+When a client wrapper is specified like in the dnode examples, using `strac.get` and `strac.connect`
 will yield the wrapped actor client instead:
 
-    strac.connect('name', function(err, client) {
+    strac.get('name', function(err, client) {
         client.transform('beep', function(result) {
             console.log("beep => ", result); 
             // beep => BOOP
         });
     });
 
-There is a caveat here: the client wrapper and server functions are NOT closures.
-They will be transformed to strings, and the server function will be
-eval-ed on the worker. If you want to pass any variables to them, use
-the options object. All options must be serializable by JSON.stringify 
+# The closure caveat:
 
-That means e.g. that you can't simply use dnode if you've already required it,
-it must be available on the worker and you must require() it in the
-function body.
+The client wrapper and server functions are NOT closures. They will be transformed 
+to strings, and the server function will be eval-ed on the worker. If you want to 
+pass any variables to them, use the options object. All options must be non-functions 
+and serializable by dnode. (note that dnode does support cyclic objects)
 
-# TODO
+What this means is that you should treat actors as if they're separate modules.
+That means e.g. that you can't simply use the dnode variable if you've already required 
+it; it must be made available on the worker by calling
+
+    var dnode = require('dnode');
+
+in the actor's server function body (just like you would do for a separate module)
+
+# Other built in actor types
 
 ## Spawn actor
 
-child process spawn based actor with its stdin and stdout streams
+This is a child process spawn based actor with its stdin and stdout streams
 available for input/output:
-    
-     // a glorified regular echo server - spawn once per client
-    strac.create('custom-process', stractory.spawnclient('cat')) 
-
 
     // a glorified 'multicast' echo server - spawn once and pipe to all clients 
-    strac.create('custom-process', stractory.spawnonce('cat')) 
+    strac.create('custom-process', stractory.spawn('cat'), function(client, cb) { cb(null, client); }); 
+
+The third argument is an optional "smarter" client.
+
+Possible uses include audio and video stream encoders
+
+# Roadmap (TODO)
+
+## Queuing client API:
+
+Queue stractory requests until a connection is estabilished.
+
+    var strac = stractory.client({host:.., port:..});
     
-
-They might need a lot of various parameters passed without closures available, 
-so generic actors (such as a dnode one) will not be straightforward to write but 
-once written they will be easier to use. That way the effects of the closure caveat, 
-while still relevant, will become less pronounced.
-
+    strac.connect('actorname', function(err, actor) {
+    });
+   
 ## Other stractory client functions:
- 
+
+
 ### Wait until an actor appears
 
     strac.wait('name', function(err, client) {
@@ -185,14 +205,24 @@ while still relevant, will become less pronounced.
         })   
     });
 
-### Get a client from cache if possible
-
-    strac.get('name', function(err, client) { });
-
 ### Support for array and regex arguments
 
-    strac.connect([array], function(err, [array]) {})
+    strac.connect([array], function([errs], [actors]) {})
 
-    strac.connect(/regex/, function(err, [array]) {});
+    strac.connect(/regex/, function([errs], [actors]) {});
+
+
+# Performance stats
+
+These are ballpark figures on what to expect. 
+
+Local machine: Core i5-2450M @ 2.5GHz with 4GB RAM (with 4 workers)
+
+ * average create time for a simple dnode actor 1.88 ms
+ * average connect time to this actor 1.90 ms
+ * average dnode message exchange time (call + callback) 0.26 ms
+
+For more info look at test\_performance in test\_factory.js
     
 Have fun!
+
