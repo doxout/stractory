@@ -249,11 +249,18 @@ These are ballpark figures on what to expect.
 
 Local machine: Core i5-2450M @ 2.5GHz with 4GB RAM (with 4 workers)
 
- * create simple dnode actor: 500 creates/s
- * connect this actor: ~500 connects/s
- * dnode message exchange (call + callback): 4000 msgs/second
+dnode actor, messages with callback and string
+  ✔ creates:820 creates/s
+  ✔ connects: 566 conn/s
+  ✔ message exchange: 8000 msg/s
 
-For more info look at test\_performance in test\_factory.js
+raw echo actor, json messages (parse/stringify)
+  ✔ creates:855 creates/s
+  ✔ connects: 782 conn/s
+  ✔ message exchange: 37037 msg/s
+
+
+For more info look at test\_factory.js
     
 Have fun!
 
