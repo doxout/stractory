@@ -157,7 +157,7 @@ exports.dnode_adder_generic = function(test) {
 
 
 
-exports.test_dnode_complex = function(test) {
+exports.dnode_complex = function(test) {
     test.expect(1);
     env.setup(function(facadr) {
         stractory.client(facadr, function(err, fac) {
@@ -176,7 +176,7 @@ exports.test_dnode_complex = function(test) {
     }, 4); 
 };
 
-exports.test_spawn = function(test) {
+exports.spawn_actor = function(test) {
     test.expect(4);
     env.setup(function(facadr) {
         stractory.client(facadr, function(err, fac) {
@@ -200,7 +200,7 @@ exports.test_spawn = function(test) {
 }
 
 
-exports.test_performance = function(test) {
+var test_performance = function(test, actorType, actorTest) {
     test.expect(3);
 
     var spawnenv = environment({spawn: true});
@@ -224,19 +224,32 @@ exports.test_performance = function(test) {
                     test.ok(perConnect < 15, "connects: " + (1000 / perConnect).toFixed() + " conn/s");
                     var r3 = resumeAfter(rooms, function() {
                         var perMsg = (new Date().getTime() - tm) / rooms;
-                        test.ok(perMsg < 2, "dnode msgs: " + (1000 / perMsg).toFixed() + " msgs/s");
+                        test.ok(perMsg < 2, "message exchange: " + (2 * 1000 / perMsg).toFixed() + " msg/s");
                         spawnenv.teardown();
                         test.done();
                     });
-                    allrooms.forEach(function(r) { r.test(r3); }); 
+                    allrooms.forEach(function(r) { actorTest(r, r3); }); 
                 });
                 for (var k = 0; k < rooms; ++k) fac.connect("room" + k, r2);
             })
             for (var k = 0; k < rooms; ++k)
-                fac.create("room" + k, people_tracking_actor, r1);
+                fac.create("room" + k, actorType, r1);
             
 
         });
     }, 4); 
 }
+
+exports.performance_dnode = function(test) {
+    test_performance(test, people_tracking_actor, function(cli, cb) { cli.test(cb); });
+}
+
+
+exports.performance_json_messages = function(test) {
+    test_performance(test, echoServer, function(cli, cb) { 
+        cli.on('data', function(data) { cb(JSON.parse(data)); });
+        cli.write(JSON.stringify({test:'data'})); 
+    }); 
+}
+
 
