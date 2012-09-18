@@ -217,14 +217,14 @@ exports.test_performance = function(test) {
             var r1 = resumeAfter(rooms, function() {
                 var t = new Date().getTime();
                 var perCreate = (t - ts) / rooms;
-                test.ok(perCreate < 25, "avg create time " + perCreate.toFixed(2) + " ms");
+                test.ok(perCreate < 25, "creates:" + (1000 / perCreate).toFixed() + " creates/s");
                 var r2 = resumeAfter(rooms, function(allrooms) {
                     var tm = new Date().getTime();
                     var perConnect = (tm - t) / rooms;
-                    test.ok(perConnect < 15, "avg connect time " + perConnect.toFixed(2) + " ms");
+                    test.ok(perConnect < 15, "connects: " + (1000 / perConnect).toFixed() + " conn/s");
                     var r3 = resumeAfter(rooms, function() {
                         var perMsg = (new Date().getTime() - tm) / rooms;
-                        test.ok(perMsg < 2, "avg dnode msg time " + perMsg.toFixed(2) + " ms");
+                        test.ok(perMsg < 2, "dnode msgs: " + (1000 / perMsg).toFixed() + " msgs/s");
                         spawnenv.teardown();
                         test.done();
                     });
