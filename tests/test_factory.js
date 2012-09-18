@@ -5,48 +5,6 @@ var worker = require('../lib/worker.js'),
 
 
 
-var environment = function() {
-    
-    var self = {};
-
-    var workers  = [];
-    var stracserv = null;
-
-        
-    self.setup = function(cb, numworkers, workopt) {
-    
-        var startport = 9000;
-
-        var strac = stractory.server({registerTimeout: 25});
-        stracserv = net.createServer(strac);
-        stracserv.listen(startport);
-        var regadr = { host: '127.0.0.1', port: startport };
-        
-        for (var k = 1; k < numworkers + 1; ++k) {
-            var w = worker.server(workopt);
-            var ws = net.createServer(w);
-            ws.listen(startport + k);
-            w.registry({host: '127.0.0.1', port: startport + k}, regadr, 10);
-            workers.push(ws);
-        }
-        
-        // Allows tome time for the workers to register
-        setTimeout(function() { cb(regadr); }, 30);
-    }
-
-    self.teardown = function() {
-        stracserv.close();
-
-        for (var k = 0; k < workers.length; ++k) {
-            workers[k].close();
-        }
-        workers = [];
-    }
-
-    return self;
-};
-
-
 var environment = function(opt) {
     
     var self = {};
@@ -70,7 +28,7 @@ var environment = function(opt) {
                 var worker_script = require('path').resolve(__dirname + '/../bin/stractory-worker.js');
                 var ws = cproc.spawn(worker_script ,
                         [
-                        '--port', startport + k, 
+                        '--listen', startport + k, 
                         '--registry', regadr.host + ':' + regadr.port,
                         '--registerEvery', 10]);
                 ws.stdout.pipe(process.stdout);
@@ -86,7 +44,7 @@ var environment = function(opt) {
             }
         }
         
-        // Allows tome time for the workers to register
+        // Allows some time for the workers to register
         var waitTime;
         if (opt && opt.spawn) waitTime = 50 + 150 * numworkers;
         else waitTime = 30;
@@ -107,6 +65,7 @@ var environment = function(opt) {
 
     return self;
 };
+
 
 var echoServer = function(opt) {
     return function(client) {

@@ -4,10 +4,10 @@ var net = require('net'),
     argv = require('optimist')
         .describe('ip', "Listening ip (all if unspecified)")
         .describe('port', "Listening port")
-        .describe('registerTimeout', 'Remove workers that dont re-register after timeout (seconds)') 
+        .describe('registerTimeout', 'Remove workers that dont re-register after timeout (sec)') 
         .default('registerTimeout', 100)
         .demand(['port'])
-        .usage('$0 --ip listenip --port listenport --registerTimeout seconds')
+        .usage('$0 [options]')
         .argv,
     stractory = require('../lib/stractory.js');
 

@@ -64,22 +64,24 @@ process all connections arriving to the actor.
 
 To run a stractory, create a stractory server:
 
-    stractory --port 9000
+    stractory --listen 9000
 
-then from the same machine you may run stractory workers:
+then from the same machine you may run 4 stractory workers:
 
-    stractory-worker --port 9001 --registry 9000
+    stractory-workers --listen 9001,9002,9003,9004 --registry 9000
 
 or you can also run them from other machines
 
-    stractory-worker --port 9001 --registry stractory_ip:9000
+    stractory-workers --listen 9001,9002 --registry stractory_ip:9000
 
 (make sure every worker has a separate ip/port combination)
 
 By default, modules will be loaded from `process.cwd()/node_modules`.
-Additionally you can specify require search paths (extra node modules dirs)
+You can specify a different working dir: 
 
-    stractory-worker --port 9001 --registry 9000 --node_modules path/to/node_modules
+    stractory-workers --listen 9001,9002 --registry 9000 --workingDir path/to/working_directory
+
+and modules will be looked up in path/to/working\_directory/node\_modules
 
 
 # Usage
@@ -247,9 +249,9 @@ These are ballpark figures on what to expect.
 
 Local machine: Core i5-2450M @ 2.5GHz with 4GB RAM (with 4 workers)
 
- * average create time for a simple dnode actor 1.88 ms
- * average connect time to this actor 1.90 ms
- * average dnode message exchange time (call + callback) 0.26 ms
+ * create simple dnode actor: 500 creates/s
+ * connect this actor: ~500 connects/s
+ * dnode message exchange (call + callback): 4000 msgs/second
 
 For more info look at test\_performance in test\_factory.js
     

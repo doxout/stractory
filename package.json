@@ -7,7 +7,7 @@
     "author": "spion <gorgi.kosev@gmail.com> (http://gkosev.blogspot.com)",
     "bin": {
         "stractory": "./bin/stractory.js",
-        "stractory-worker": "./bin/stractory-worker.js"
+        "stractory-workers": "./bin/stractory-workers.js"
     },
     "repository" :{ 
         "type" : "git", 
