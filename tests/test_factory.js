@@ -253,7 +253,7 @@ exports.performance_json_messages = function(test) {
                 .map(JSON.parse).map(cb);
             });
         }
-        cli.write(JSON.stringify({test:'data'}) + '\n'); 
+        cli.write(JSON.stringify({test:'data', more:true, nothing:null, arr:[1,2,3]}) + '\n'); 
     }, 200);
 }
 
