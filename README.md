@@ -250,14 +250,14 @@ These are ballpark figures on what to expect.
 Local machine: Core i5-2450M @ 2.5GHz with 4GB RAM (with 4 workers)
 
 dnode actor, messages with callback and string
-  * creates:820 creates/s
-  * connects: 566 conn/s
-  * message exchange: 8000 msg/s
+  * creates: 770 creates/s
+  * connects: 540 conn/s
+  * message exchange: 9000 msg/s
 
 raw echo actor, json messages (parse/stringify)
-  * creates:855 creates/s
-  * connects: 782 conn/s
-  * message exchange: 37037 msg/s
+  * creates: 870 creates/s
+  * connects: 750 conn/s
+  * message exchange: 75000 msg/s
 
 
 For more info look at test\_factory.js

@@ -52,7 +52,7 @@ var environment = function(opt) {
     }
 
     self.teardown = function() {
-        stracserv.close();
+        try { stracserv.close(); } catch (e) { console.log(e); }
 
         for (var k = 0; k < workers.length; ++k) {
             if (opt && opt.spawn) {
@@ -95,8 +95,7 @@ var people_tracking_actor = stractory.dnode({}, function() {
 
 
 
-var env = environment();
-
+var env = environment({spawn:true});
 
 var test_dnodes = function(test, dnode_tested) {
     test.expect(5);
@@ -200,7 +199,7 @@ exports.spawn_actor = function(test) {
 }
 
 
-var test_performance = function(test, actorType, actorTest) {
+var test_performance = function(test, actorType, actorTest, msgCount) {
     test.expect(3);
 
     var spawnenv = environment({spawn: true});
@@ -211,7 +210,7 @@ var test_performance = function(test, actorType, actorTest) {
             var resumeAfter = function(n, cb) {
                 var alldata = [];
                 return function(err, data) {
-                    alldata.push(data); if (--n <= 0) cb(alldata); };
+                    alldata.push(data); if (--n == 0) cb(alldata); };
             };
             var ts = new Date().getTime();
             var r1 = resumeAfter(rooms, function() {
@@ -222,13 +221,13 @@ var test_performance = function(test, actorType, actorTest) {
                     var tm = new Date().getTime();
                     var perConnect = (tm - t) / rooms;
                     test.ok(perConnect < 15, "connects: " + (1000 / perConnect).toFixed() + " conn/s");
-                    var r3 = resumeAfter(rooms, function() {
-                        var perMsg = (new Date().getTime() - tm) / rooms;
+                    var r3 = resumeAfter(rooms * msgCount, function() {
+                        var perMsg = (new Date().getTime() - tm) / (rooms * msgCount);
                         test.ok(perMsg < 2, "message exchange: " + (2 * 1000 / perMsg).toFixed() + " msg/s");
                         spawnenv.teardown();
                         test.done();
                     });
-                    allrooms.forEach(function(r) { actorTest(r, r3); }); 
+                    for (var k = 0; k < msgCount; ++k) allrooms.forEach(function(r) { actorTest(r, r3); }); 
                 });
                 for (var k = 0; k < rooms; ++k) fac.connect("room" + k, r2);
             })
@@ -241,15 +240,20 @@ var test_performance = function(test, actorType, actorTest) {
 }
 
 exports.performance_dnode = function(test) {
-    test_performance(test, people_tracking_actor, function(cli, cb) { cli.test(cb); });
+    test_performance(test, people_tracking_actor, function(cli, cb) { cli.test(cb); }, 20);
 }
 
 
 exports.performance_json_messages = function(test) {
     test_performance(test, echoServer, function(cli, cb) { 
-        cli.on('data', function(data) { cb(JSON.parse(data)); });
-        cli.write(JSON.stringify({test:'data'})); 
-    }); 
+        if (!cli.has_on_bind) { 
+            cli.has_on_bind = true; 
+            cli.on('data', function(data) { 
+                var jsons = data.toString().trim().split('\n')
+                .map(JSON.parse).map(cb);
+            });
+        }
+        cli.write(JSON.stringify({test:'data'}) + '\n'); 
+    }, 200);
 }
-
 
