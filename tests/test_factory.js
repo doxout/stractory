@@ -198,6 +198,46 @@ exports.spawn_actor = function(test) {
     }, 2);
 }
 
+var multicastEchoEmitter = stractory.eventemitter(function() {
+    var clients = [];
+    return function(ee) {
+        clients.push(ee);
+        ee.recv.on('echo', function(data) { 
+            clients.forEach(function(c) { c.send.emit('echo', data) }) 
+        });
+    }
+});
+
+exports.eventemitter_actor = function(test) {
+    test.expect(5);
+    env.setup(function(facadr) {
+        stractory.client(facadr, function(err, fac) {
+            fac.create('ee', multicastEchoEmitter, function(err) {
+                test.ok(!err, 'create eventemitter ee: ' + err);
+                fac.connect('ee', function(err, c1) {
+                    test.ok(!err, 'connect to cat 1: ' + err);
+                    fac.connect('ee', function(err, c2) {
+                        test.ok(!err, 'connect to cat 2 ' + err);
+                        var packet = {data: [1,2,3,4]}
+                        c2.send.emit('echo', packet);
+                        c1.send.emit('echo', packet);
+                        var expect = 2;
+                        c1.recv.on('echo', function(p) {
+                            test.ok(JSON.stringify(packet) 
+                                == JSON.stringify(p), 
+                                'trasmit '+expect+' complete ' + JSON.stringify(p));
+                            if (--expect == 0) {
+                                env.teardown();
+                                test.done(); 
+                            }
+                        });
+                    });
+                });
+            });
+        });
+    }, 1);
+};
+
 
 var test_performance = function(test, actorType, actorTest, msgCount) {
     test.expect(3);
@@ -205,7 +245,7 @@ var test_performance = function(test, actorType, actorTest, msgCount) {
     var spawnenv = environment({spawn: true});
     spawnenv.setup(function(facadr) {
         stractory.client(facadr, function(err, fac) {
-            var rooms = 500;
+            var rooms = 1000;
 
             var resumeAfter = function(n, cb) {
                 var alldata = [];
@@ -227,7 +267,7 @@ var test_performance = function(test, actorType, actorTest, msgCount) {
                         spawnenv.teardown();
                         test.done();
                     });
-                    for (var k = 0; k < msgCount; ++k) allrooms.forEach(function(r) { actorTest(r, r3); }); 
+                    for (var k = 0; k < msgCount; ++k) allrooms.forEach(function(r) { actorTest(r, r3, k); }); 
                 });
                 for (var k = 0; k < rooms; ++k) fac.connect("room" + k, r2);
             })
@@ -236,24 +276,24 @@ var test_performance = function(test, actorType, actorTest, msgCount) {
             
 
         });
-    }, 4); 
+    }, 1); 
 }
 
 exports.performance_dnode = function(test) {
-    test_performance(test, people_tracking_actor, function(cli, cb) { cli.test(cb); }, 20);
+    test_performance(test, people_tracking_actor, function(cli, cb) { cli.test(cb); }, 10);
 }
 
 
-exports.performance_json_messages = function(test) {
-    test_performance(test, echoServer, function(cli, cb) { 
-        if (!cli.has_on_bind) { 
-            cli.has_on_bind = true; 
-            cli.on('data', function(data) { 
-                var jsons = data.toString().trim().split('\n')
-                .map(JSON.parse).map(cb);
-            });
-        }
-        cli.write(JSON.stringify({test:'data', more:true, nothing:null, arr:[1,2,3]}) + '\n'); 
-    }, 200);
+var echoEmitter = stractory.eventemitter(function(options) {
+    return function(ee) {
+        ee.recv.on('echo', function(data) { ee.send.emit('echo', data); });
+    };
+});
+
+exports.performance_eventemitter = function(test) {
+    test_performance(test, echoEmitter, function(cli, cb, notFirst) { 
+        if (!notFirst) cli.recv.on('echo', cb); 
+        cli.send.emit('echo', {test:'data', more:true, nothing:null, arr:[1,2,3]});
+    }, 30);
 }
 

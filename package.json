@@ -17,6 +17,10 @@
         "dnode":"1.0.1",
         "through":"1.0.0",
         "resolve":"0.2.3",
-        "optimist":"0.3.4"
+        "optimist":"0.3.4",
+
+
+        "emit-stream":"0.1.0",
+        "JSONStream":"0.4.1"
     }    
 }

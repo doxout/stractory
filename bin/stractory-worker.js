@@ -7,6 +7,8 @@ var net = require('net'),
         .describe('listen', 'listening ip:port or just port (default ip 127.0.0.1)')
         .describe('registry', 'stractory ip:port or just port (default ip 127.0.0.1)')
         .describe('workingDir', 'working directory (should contain node_modules)')
+        .describe('domains', 'Use a single error domain per actor (prevents worker crash)')
+        .default('domains', true)
         .default('workingDir', process.cwd())
         .describe('registerEvery', 'Notify the stractory that we are here every X seconds')
         .default('registerEvery', 30)

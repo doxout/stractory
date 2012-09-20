@@ -225,6 +225,17 @@ Queue stractory requests until a connection is estabilished.
     strac.connect('actorname', function(err, actor) {
     });
    
+## Binary stream multiplexer (?)
+
+If instead of multiple connections a binary stream multiplexer
+is used, things like scaling to 100 000 actors might be possible,
+and stractory wouldn't be limited to < `ulimit -n` actor connections
+per process.
+
+## Isolate actors in separate domains
+
+This should prevent one actor from crashing an entire worker
+
 ## Other stractory client functions:
 
 ### Wait until an actor appears
@@ -247,17 +258,15 @@ Queue stractory requests until a connection is estabilished.
 
 These are ballpark figures on what to expect. 
 
-Local machine: Core i5-2450M @ 2.5GHz with 4GB RAM (with 4 workers)
+Local machine: Core i5-2450M @ 2.5GHz with 4GB RAM (with 1 worker)
 
+any actor type
+  * creates: 600 creates/s (700 with 4 workers)
+  * connects: 250 conn/s (550 with 4 workers)
 dnode actor, messages with callback and string
-  * creates: 770 creates/s
-  * connects: 540 conn/s
-  * message exchange: 9000 msg/s
-
-raw echo actor, json messages (parse/stringify)
-  * creates: 870 creates/s
-  * connects: 750 conn/s
-  * message exchange: 75000 msg/s
+  * message exchange: 11,000 msg/s
+eventemitter actor, pure json messages
+  * message exchange: 40,000 msg/s
 
 
 For more info look at test\_factory.js
