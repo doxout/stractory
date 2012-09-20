@@ -146,7 +146,7 @@ To do this, specify an actor server, an actor client wrapper and options to pass
 
 Create a dnode-based actor:
 
-        var dnode_transformer = stractory.dnode({replaceWith:'oo'}, function(options) {
+    var dnode_transformer = stractory.dnode({replaceWith:'oo'}, function(options) {
         return {
             transform : function (s, cb) {
                 cb(s.replace(/[aeiou]{2,}/, options.replaceWith).toUpperCase())
