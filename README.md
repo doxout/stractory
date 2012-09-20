@@ -10,6 +10,95 @@ Well, it should be much easier with stractory, the streaming actor factory
 
 Stractory allows you to run stream actors (like dnode) on a pool of generic workers. 
 
+# Setup and chatroom example 
+
+    sudo npm install -g "git://github.com/spion/stractory"
+
+To run a stractory, create a stractory server:
+
+    stractory --listen 9000 &
+
+then from the same machine you may run 4 stractory workers:
+
+    stractory-workers --listen 9001,9002,9003,9004 --registry 9000
+
+Install it locally:
+
+    npm install "git://github.com/spion/stractory"
+
+Run a node repl:
+
+    node
+
+Create a dnode-based chatroom actor...  
+
+    var stractory = require('stractory');
+
+    var chatroom = stractory.dnode(function() {
+        var people = {};
+        var msgs = [];
+
+        var event_callbacks = {};
+        return {
+            join: function(person) { 
+                people[person] = true; 
+                if (event_callbacks['join'])
+                    event_callbacks['join'].forEach(function(cb) { cb(person); });
+            },
+            part: function(person) { if (people[person]) delete people[person]; },
+            on: function(evt, callback) {
+               if (!event_callbacks[evt]) event_callbacks[evt] = []; 
+               event_callbacks[evt].push(callback); 
+            },
+            msg: function(person, msg) {
+                msgs.push(msg);  
+                if (event_callbacks['msg'])
+                    event_callbacks['msg'].forEach(function(cb) { cb(person, msg); });
+            },
+            list: function(callback) { callback(people); },
+            msglist: function(callback) { callback(msgs); }
+        }
+    });
+
+and tell stractory to run it by the name `myroom`  on a random worker
+
+    stractory.client({host: '127.0.0.1', port: 9000}, function(err, strac) {
+        strac.create('myroom', chatroom, function(err) { 
+            strac.get('myroom', function(err, room) {
+                room.on('join', function(person) { console.log("*", person, "joined"); });
+                room.on("msg", function(who, msg) { console.log("<" + who + ">", msg); });
+            });
+        });
+    });
+
+We're also listening for messages and joins to the chatroom.
+    
+Lets run another repl 
+    
+    node    
+
+and connect to the stractory and tell it to run a chatroom called `myroom` on a random worker
+
+    var stractory = require('stractory');
+
+    stractory.client({host: '127.0.0.1', port: 9000}, function(err, strac) {
+        if (err) throw err;
+        strac.get('myroom', function(err, room) {
+            if (err) throw err;
+            room.join("Alex");
+            room.join("Bob");
+            room.msg("Alex", "Hello");
+            room.msg("Bob", "Hello back");
+        });
+    });
+
+You should get this in the first REPL:
+
+    * Alex joined
+    * Bob joined
+    <Alex> Hello
+    <Bob> Hello back
+
 # What is a stractory server?
 
 A stractory server allows you to create stream actors.
@@ -28,6 +117,20 @@ stractory server. When the stractory is asked to create an actor, it will
 delegate the actor's server function to a random worker which will
 execute it. The returned client-handling function will be used to 
 process all connections arriving to the actor.
+
+# More about running workers
+
+You can also run workers from other machines
+
+    stractory-workers --listen 9001,9002 --registry stractory_ip:9000
+
+By default, workers will load modules from `process.cwd()/node_modules`.
+You can specify a different working dir: 
+
+    stractory-workers --listen 9001,9002 --registry 9000 --workingDir path/to/working_directory
+
+and modules will be looked up in path/to/working\_directory/node\_modules
+
 
 # How is this different than [hook.io](http://github.com/hookio/hook.io)?
 
@@ -57,32 +160,6 @@ process all connections arriving to the actor.
   <td>powerful wildcard messaging</td>
 </tr>
 </table>
-
-# Setup 
-
-    sudo npm install -g "git://github.com/spion/stractory"
-
-To run a stractory, create a stractory server:
-
-    stractory --listen 9000
-
-then from the same machine you may run 4 stractory workers:
-
-    stractory-workers --listen 9001,9002,9003,9004 --registry 9000
-
-or you can also run them from other machines
-
-    stractory-workers --listen 9001,9002 --registry stractory_ip:9000
-
-(make sure every worker has a separate ip/port combination)
-
-By default, modules will be loaded from `process.cwd()/node_modules`.
-You can specify a different working dir: 
-
-    stractory-workers --listen 9001,9002 --registry 9000 --workingDir path/to/working_directory
-
-and modules will be looked up in path/to/working\_directory/node\_modules
-
 
 # Usage
 

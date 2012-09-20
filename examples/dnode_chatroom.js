@@ -34,14 +34,14 @@ stractory.client({host: '127.0.0.1', port: 9000}, function(err, strac) {
             
             room.on('join', function(person) { console.log("*", person, "joined"); });
             room.join("Alex");
-            room.join("Nekoj");
+            room.join("Bob");
 
             room.on("msg", function(who, msg) {
                 console.log("<" + who + ">", msg);
             });
 
-            room.msg("Alex", "Zdravo");
-            room.msg("Nekoj", "Zdravo nazad");
+            room.msg("Alex", "Hello");
+            room.msg("Bob", "Hello back");
             room.list(function(l) { console.log("people", l); });
             room.msglist(function(ml) { console.log("msgs", ml); });
         })
