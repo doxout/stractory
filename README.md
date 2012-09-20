@@ -63,6 +63,15 @@ on what worker process. All other communication is between workers and client pr
 Instead giving separate jobs to separate processes we simply run generic workers
 and stractory will automatically spread our actors across all of them. 
 
+Some good actor examples:
+
+- a single game between two (or more) players
+- a chatroom actor
+- a collaborative drawing board actor
+- a single opened live document actor
+
+and so on.
+
 # Setup 
 
     sudo npm install -g "git://github.com/spion/stractory"
