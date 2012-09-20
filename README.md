@@ -77,7 +77,7 @@ Lets run another repl
     
     node    
 
-and connect to the stractory and tell it to run a chatroom called `myroom` on a random worker
+connect to the room and make some noise
 
     var stractory = require('stractory');
 
