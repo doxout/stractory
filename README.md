@@ -65,10 +65,10 @@ and stractory will automatically spread our actors across all of them.
 
 Some good actor examples:
 
-- a single game between two (or more) players
-- a chatroom actor
-- a collaborative drawing board actor
-- a single opened live document actor
+- a game between two (or more) players
+- a chatroom 
+- a collaborative drawing board 
+- a single opened live document
 
 and so on.
 
