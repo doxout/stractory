@@ -22,82 +22,9 @@ then from the same machine you may run 4 stractory workers:
 
     stractory-workers --listen 9001,9002,9003,9004 --registry 9000
 
-Install it locally:
+To use as a library, install it in the local directory:
 
     npm install "git://github.com/spion/stractory"
-
-Run a node repl:
-
-    node
-
-Create a dnode-based chatroom actor...  
-
-    var stractory = require('stractory');
-
-    var chatroom = stractory.dnode(function() {
-        var people = {};
-        var msgs = [];
-
-        var event_callbacks = {};
-        return {
-            join: function(person) { 
-                people[person] = true; 
-                if (event_callbacks['join'])
-                    event_callbacks['join'].forEach(function(cb) { cb(person); });
-            },
-            part: function(person) { if (people[person]) delete people[person]; },
-            on: function(evt, callback) {
-               if (!event_callbacks[evt]) event_callbacks[evt] = []; 
-               event_callbacks[evt].push(callback); 
-            },
-            msg: function(person, msg) {
-                msgs.push(msg);  
-                if (event_callbacks['msg'])
-                    event_callbacks['msg'].forEach(function(cb) { cb(person, msg); });
-            },
-            list: function(callback) { callback(people); },
-            msglist: function(callback) { callback(msgs); }
-        }
-    });
-
-and tell stractory to run it by the name `myroom`  on a random worker
-
-    stractory.client({host: '127.0.0.1', port: 9000}, function(err, strac) {
-        strac.create('myroom', chatroom, function(err) { 
-            strac.get('myroom', function(err, room) {
-                room.on('join', function(person) { console.log("*", person, "joined"); });
-                room.on("msg", function(who, msg) { console.log("<" + who + ">", msg); });
-            });
-        });
-    });
-
-We're also listening for messages and joins to the chatroom.
-    
-Lets run another repl 
-    
-    node    
-
-connect to the room and make some noise
-
-    var stractory = require('stractory');
-
-    stractory.client({host: '127.0.0.1', port: 9000}, function(err, strac) {
-        if (err) throw err;
-        strac.get('myroom', function(err, room) {
-            if (err) throw err;
-            room.join("Alex");
-            room.join("Bob");
-            room.msg("Alex", "Hello");
-            room.msg("Bob", "Hello back");
-        });
-    });
-
-You should get this in the first REPL:
-
-    * Alex joined
-    * Bob joined
-    <Alex> Hello
-    <Bob> Hello back
 
 # What is a stractory server?
 
@@ -214,32 +141,7 @@ To do this, specify an actor server, an actor client wrapper and options to pass
 
 Create a dnode-based actor:
 
-    var dnode_transformer = {
-        options: {
-            replaceWith:'oo'
-        },
-        server: function(options) {
-            var d = require('dnode');
-            var srv = {
-                transform : function (s, cb) {
-                    cb(s.replace(/[aeiou]{2,}/, options.replaceWith).toUpperCase())
-                }
-            };
-            return function(client) { client.pipe(dnode(srv)).pipe(client); } 
-        },
-        client:function(client, cb) {
-            var d = require('dnode')();
-            d.on('remote', function(remote) {
-                cb(null, remote);
-            });
-            client.pipe(d).pipe(client);
-        }
-    }
-    strac.create('name', dnode_transformer, function(err) { });
-
-Or use the built-in dnode agent builder function (shorter and safer)
-
-    var dnode_transformer = stractory.dnode({replaceWith:'oo'}, function(options) {
+        var dnode_transformer = stractory.dnode({replaceWith:'oo'}, function(options) {
         return {
             transform : function (s, cb) {
                 cb(s.replace(/[aeiou]{2,}/, options.replaceWith).toUpperCase())
@@ -276,6 +178,83 @@ it; it must be made available on the worker by calling
 
 in the actor's server function body (just like you would do for a separate module)
 
+# Chatroom example
+
+Run a node repl:
+
+    node
+
+Create a dnode-based chatroom actor...  
+
+    var stractory = require('stractory');
+
+    var chatroom = stractory.dnode(function() {
+        var people = {};
+        var msgs = [];
+
+        var event_callbacks = {};
+        return {
+            join: function(person) { 
+                people[person] = true; 
+                if (event_callbacks['join'])
+                    event_callbacks['join'].forEach(function(cb) { cb(person); });
+            },
+            part: function(person) { if (people[person]) delete people[person]; },
+            on: function(evt, callback) {
+               if (!event_callbacks[evt]) event_callbacks[evt] = []; 
+               event_callbacks[evt].push(callback); 
+            },
+            msg: function(person, msg) {
+                msgs.push(msg);  
+                if (event_callbacks['msg'])
+                    event_callbacks['msg'].forEach(function(cb) { cb(person, msg); });
+            },
+            list: function(callback) { callback(people); },
+            msglist: function(callback) { callback(msgs); }
+        }
+    });
+
+and tell stractory to run it by the name `myroom`  on a random worker
+
+    stractory.client({host: '127.0.0.1', port: 9000}, function(err, strac) {
+        strac.create('myroom', chatroom, function(err) { 
+            strac.get('myroom', function(err, room) {
+                room.on('join', function(person) { console.log("*", person, "joined"); });
+                room.on("msg", function(who, msg) { console.log("<" + who + ">", msg); });
+            });
+        });
+    });
+
+We're also listening for messages and joins to the chatroom.
+    
+Lets run another repl 
+    
+    node    
+
+connect to the room and make some noise
+
+    var stractory = require('stractory');
+
+    stractory.client({host: '127.0.0.1', port: 9000}, function(err, strac) {
+        if (err) throw err;
+        strac.get('myroom', function(err, room) {
+            if (err) throw err;
+            room.join("Alex");
+            room.join("Bob");
+            room.msg("Alex", "Hello");
+            room.msg("Bob", "Hello back");
+        });
+    });
+
+You should get this in the first REPL:
+
+    * Alex joined
+    * Bob joined
+    <Alex> Hello
+    <Bob> Hello back
+
+
+
 # Other built in actor types
 
 ## Spawn actor
@@ -289,6 +268,33 @@ available for input/output:
 The third argument is an optional "smarter" client.
 
 Possible uses include audio and video stream encoders.
+
+## Eventemitter actor:
+
+If you don't need the callback functionality of dnode, (you only need
+to transmit simple JSON objects i.e. message passing), you can use stractory.eventemitter.
+The only benefit is that its 4 times faster than dnode
+
+    var multicastEchoEmitter = stractory.eventemitter(function() {
+        var clients = []; 
+        return function(ee) {
+            clients.push(ee);
+            ee.recv.on('echo', function(data) { 
+                clients.forEach(function(c) { c.send.emit('echo', data) })  
+            }); 
+        }   
+    });
+
+    stractory.client(facadr, function(err, fac) {
+        fac.create('ee', multicastEchoEmitter, function(err) {
+            fac.connect('ee', function(err, ee) {
+                ee.recv.on('echo', function(msg) {
+                    console.log(msg);
+                });
+                ee.send.emit('echo', {hello: "world"});
+            });
+        });
+    });
 
 
 # Roadmap (TODO)
@@ -309,9 +315,6 @@ is used, things like scaling to 100 000 actors might be possible,
 and stractory wouldn't be limited to < `ulimit -n` actor connections
 per process.
 
-## Isolate actors in separate domains
-
-This should prevent one actor from crashing an entire worker
 
 ## Other stractory client functions:
 
