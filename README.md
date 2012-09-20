@@ -354,8 +354,10 @@ Local machine: Core i5-2450M @ 2.5GHz with 4GB RAM (with 1 worker)
 any actor type
   * creates: 600 creates/s (700 with 4 workers)
   * connects: 250 conn/s (550 with 4 workers)
+
 dnode actor, messages with callback and string
   * message exchange: 11,000 msg/s
+
 eventemitter actor, pure json messages
   * message exchange: 40,000 msg/s
 
