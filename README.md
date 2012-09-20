@@ -46,8 +46,8 @@ need to scale beyond that, we may find ourselves needing to rewrite large chunks
 of our code that unfortunately rely on memory, event emitters and streams 
 being available to all clients (e.g. socket.io). 
 
-To solve this problem we can use redis as a communication channel. However this might mean 
-large changes in our code.
+To solve this problem we can use e.g. redis as a communication channel between processes. 
+However this might mean large changes in our code.
 
 Another aproach is to write a service for each task and run them on separate processes.
 However a single process doing one thing means we constantly need to calculate how many
@@ -69,6 +69,7 @@ Some good actor examples:
 - a chatroom 
 - a collaborative drawing board 
 - a single opened live document
+- a live audio/video stream
 
 and so on.
 
