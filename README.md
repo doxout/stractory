@@ -28,15 +28,14 @@ Stractory can distribute these streaming actors to run on multiple worker proces
 on multiple machines.
     
 When the stractory is asked to create a named actor, it will run the actor's server
-on a random worker from the pool. The name must be unique.
+on a random worker from the pool. The name must be globally unique.
 
     mystractory.create("name", stractory.dnode(function() { 
         // the exported dnode functions
         return { dostuff: function() {} };
     }); 
 
-Afterwards we can ask the stractory to get us a client to the named actor.
-and we can send messages to the client.
+Afterwards we can ask the stractory to get us the named actor from any process
 
     mystractory.get("name", function(actor) { actor.dostuff(); });
 
