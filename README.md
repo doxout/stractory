@@ -10,6 +10,37 @@ Well, it should be much easier with stractory, the streaming actor factory
 
 Stractory allows you to run stream actors (like dnode) on a pool of generic workers. 
 
+# What is a stractory server?
+
+A stractory server allows you to create named stream actors.
+
+Stream actors are basically lightweight services. They consist of:
+- a stream server with a protocol
+- an optional client that abstracts the protocol
+
+
+For example, [dnode](http://github.com/substack/dnode) is a type of a stream actor: 
+dnode actors consist of: 
+- a server that provides RPC 
+- the client that abstracts the dnode protocol and is used to call RPC on the server
+
+Stractory can distribute these streaming actors to run on multiple worker processes
+on multiple machines.
+    
+When the stractory is asked to create a named actor, it will run the actor's server
+on a random worker from the pool. The name must be unique.
+
+    mystractory.create("name", stractory.dnode(function() { 
+        // the exported dnode functions
+        return { dostuff: function() {} };
+    }); 
+
+Afterwards we can ask the stractory to get us a client to the named actor.
+and we can send messages to the client.
+
+    mystractory.get("name", function(actor) { actor.dostuff(); });
+
+
 # Setup 
 
     sudo npm install -g "git://github.com/spion/stractory"
@@ -26,25 +57,6 @@ To use as a library, install it in the local directory:
 
     npm install "git://github.com/spion/stractory"
 
-# What is a stractory server?
-
-A stractory server allows you to create stream actors.
-
-Stream actors are basically lightweight services. They consist of:
-- a stream server with a protocol
-- an optional client that abstracts the protocol
-
-For example, [dnode](http://github.com/substack/dnode) is a type of a stream actor: dnode actors consist
-of a server that handles connections and answers RPC messages, and the client
-that abstracts the dnode protocol, used to communicate with the actor server
-
-The point of stractory is to distribute these streaming actors to multiple
-machines. To do this multiple generic workers can join (register to) a 
-stractory server. When the stractory is asked to create an actor, it will
-delegate the actor's server function to a random worker which will
-execute it. The returned client-handling function will be used to 
-process all connections arriving to the actor.
-
 # More about running workers
 
 You can also run workers from other machines
@@ -58,35 +70,6 @@ You can specify a different working dir:
 
 and modules will be looked up in path/to/working\_directory/node\_modules
 
-
-# How is this different than [hook.io](http://github.com/hookio/hook.io)?
-
-<table>
-<tr>
-  <th></th><th>stractory</th><th>hook.io</th>
-</tr>
-<tr>
-  <td>protocol and client</td>
-  <td>simple stream, use any protocol / client: event emitter, dnode, binary, ...</td>
-  <td>JSON based protocol, event emitter client.</td>
-</tr>
-<tr>
-  <td>I/O</td><td>most I/O is between workers</td><td>all I/O routed through a single hook</td>
-</tr>
-<tr>
-  <td>auto discovery</td><td>none</td><td>mdns</td>
-</tr>
-<tr>
-  <td>management</td>
-  <td>autoassign actor to worker, deploy modules manually</td>
-  <td>manually decide which and how many hooks to run on which processes on which machines, then manually set all that up</td>
-</tr>
-<tr>
-  <td>address multiple actors</td>
-  <td>n/a: simple connect/get actor by name (but more comming soon)</td>
-  <td>powerful wildcard messaging</td>
-</tr>
-</table>
 
 # Usage
 
@@ -163,7 +146,36 @@ will yield the wrapped actor client instead:
         });
     });
 
-# The closure caveat:
+# How is this different than [hook.io](http://github.com/hookio/hook.io)?
+
+<table>
+<tr>
+  <th></th><th>stractory</th><th>hook.io</th>
+</tr>
+<tr>
+  <td>protocol and client</td>
+  <td>simple stream, use any protocol / client: event emitter, dnode, binary, ...</td>
+  <td>JSON based protocol, event emitter client.</td>
+</tr>
+<tr>
+  <td>I/O</td><td>most I/O is between workers</td><td>all I/O routed through a single hook</td>
+</tr>
+<tr>
+  <td>auto discovery</td><td>none</td><td>mdns</td>
+</tr>
+<tr>
+  <td>management</td>
+  <td>autoassign actor to worker, deploy modules manually</td>
+  <td>manually decide which and how many hooks to run on which processes on which machines, then manually set all that up</td>
+</tr>
+<tr>
+  <td>address multiple actors</td>
+  <td>n/a: simple connect/get actor by name (but more comming soon)</td>
+  <td>powerful wildcard messaging</td>
+</tr>
+</table>
+
+# Closure caveat
 
 The client wrapper and server functions are NOT closures. They will be transformed 
 to strings, and the server function will be eval-ed on the worker. If you want to 
