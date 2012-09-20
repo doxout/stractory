@@ -10,7 +10,7 @@ Well, it should be much easier with stractory, the streaming actor factory
 
 Stractory allows you to run stream actors (like dnode) on a pool of generic workers. 
 
-# Setup and chatroom example 
+# Setup 
 
     sudo npm install -g "git://github.com/spion/stractory"
 
