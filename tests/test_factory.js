@@ -278,17 +278,13 @@ var test_performance = function(test, actorType, actorTest, msgCount) {
         });
     }, 1); 
 }
-
-exports.performance_dnode = function(test) {
-    test_performance(test, people_tracking_actor, function(cli, cb) { cli.test(cb); }, 10);
-}
-
-
 var echoEmitter = stractory.eventemitter(function(options) {
     return function(ee) {
         ee.recv.on('echo', function(data) { ee.send.emit('echo', data); });
     };
 });
+
+
 
 exports.performance_eventemitter = function(test) {
     test_performance(test, echoEmitter, function(cli, cb, notFirst) { 
@@ -296,4 +292,10 @@ exports.performance_eventemitter = function(test) {
         cli.send.emit('echo', {test:'data', more:true, nothing:null, arr:[1,2,3]});
     }, 30);
 }
+
+exports.performance_dnode = function(test) {
+    test_performance(test, people_tracking_actor, function(cli, cb) { cli.test(cb); }, 10);
+}
+
+
 
