@@ -225,7 +225,7 @@ in the actor's server function body (just like you would do for a separate modul
 
 The returned stractory client is an eventemitter and supports the following events
 
-## error
+### error
    
 An error in the connection or dnode communication occured. You should
 probably re-estabilish a new client connection if you wish to continue, e.g.
@@ -236,34 +236,34 @@ probably re-estabilish a new client connection if you wish to continue, e.g.
     })
     strac.on('error', errorHandler);    
 
-## timeout
+### timeout
 
 Connection to the stractory server has timed out. See 
 [timeout in net.Socket](http://nodejs.org/api/net.html#net_event_timeout)
 
-## close
+### close
 
 Connection to the stractory server was closed. See
 [close in net.Socket](http://nodejs.org/api/net.html#net_event_close_1)
 
-## fail
+### fail
 
 A dnode protocol communication error has occured. Usually the client can
 recover from this error.
 
-## actor-timeout:
+### actor-timeout:
 
 Connection estabilished to an actor has timed out.
 
     strac.on('actor-timeout', function(actorName, actorConnection) { })
 
-## actor-error
+### actor-error
 
 An error in the connection to the actor has occured
 
     strac.on('actor-error', function(actorName, actorConnetion, error) { });
 
-## actor-close
+### actor-close
 
 Connection to the actor was closed. Addiional parameter indicates if the
 connection was closed because of an error.
