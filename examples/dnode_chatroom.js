@@ -25,25 +25,25 @@ var chatroom = stractory.dnode(function() {
         msglist: function(callback) { callback(msgs); }
     }
 });
-stractory.client({host: '127.0.0.1', port: 9000}, function(err, strac) {
 
-    strac.create('myroom', chatroom, function(err) { 
-        //if (err) throw err;
-        strac.get('myroom', function(err, room) {
-            if (err) throw err;
-            
-            room.on('join', function(person) { console.log("*", person, "joined"); });
-            room.join("Alex");
-            room.join("Bob");
+var strac = stractory.client({host: '127.0.0.1', port: 9000});
 
-            room.on("msg", function(who, msg) {
-                console.log("<" + who + ">", msg);
-            });
+strac.create('myroom', chatroom, function(err) { 
+    //if (err) throw err;
+    strac.get('myroom', function(err, room) {
+        if (err) throw err;
 
-            room.msg("Alex", "Hello");
-            room.msg("Bob", "Hello back");
-            room.list(function(l) { console.log("people", l); });
-            room.msglist(function(ml) { console.log("msgs", ml); });
-        })
-    });
+        room.on('join', function(person) { console.log("*", person, "joined"); });
+        room.join("Alex");
+        room.join("Bob");
+
+        room.on("msg", function(who, msg) {
+            console.log("<" + who + ">", msg);
+        });
+
+        room.msg("Alex", "Hello");
+        room.msg("Bob", "Hello back");
+        room.list(function(l) { console.log("people", l); });
+        room.msglist(function(ml) { console.log("msgs", ml); });
+    })
 });
