@@ -41,15 +41,15 @@ Afterwards we can ask the stractory to get us the named actor from any process
 
 # Why
 
-Writing node.js code is easy as long as we stick to a single process. But the moment we
-need to scale beyond that, we may find ourselves needing to rewrite large chunks 
+Writing node.js code is easy as long as we stick to a single process. However the moment 
+we need to scale beyond that, we may find ourselves needing to rewrite large chunks 
 of our code that unfortunately rely on memory, event emitters and streams 
 being available to all clients (e.g. socket.io). 
 
 To solve this problem we can use e.g. redis as a communication channel between processes. 
 However this might mean large changes in our code.
 
-Another aproach is to write a service for each task and run them on separate processes.
+Another approach is to write a service for each task and run them on separate processes.
 However a single process doing one thing means we constantly need to calculate how many
 processes of what type we need to run on how many machines
 
@@ -57,10 +57,10 @@ With stractory we can move our existing code inside actors and keep on sharing
 memory, streams and event emitters. 
 
 Unlike redis, there is no single channel through which all messages pass. Instead
-there is a single registry (the stractory) which only assigns and keeps track what actors run
-on what worker process. All other communication is between workers and client processes.  
+there is a single registry (the stractory) which only assigns and keeps track which actor runs
+on which worker process. All other communication is between workers and client processes.  
 
-Instead giving separate jobs to separate processes we simply run generic workers
+Finally, instead of giving separate jobs to separate processes we simply run generic workers
 and stractory will automatically spread our actors across all of them. 
 
 Some good actor examples:
@@ -202,7 +202,7 @@ will yield the wrapped actor client instead:
 </tr>
 <tr>
   <td>address multiple actors</td>
-  <td>n/a: simple connect/get actor by name (but more comming soon)</td>
+  <td>n/a: simple connect/get actor by name (but more coming soon)</td>
   <td>powerful wildcard messaging</td>
 </tr>
 </table>
@@ -345,7 +345,7 @@ The only benefit is that its 4 times faster than dnode
 
 ## Queuing client API:
 
-Queue stractory requests until a connection is estabilished.
+Queue stractory requests until a connection is established.
 
     var strac = stractory.client({host:.., port:..});
     
