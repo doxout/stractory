@@ -259,12 +259,11 @@ Create a dnode-based chatroom actor...
 
 and tell stractory to run it by the name `myroom`  on a random worker
 
-    stractory.client({host: '127.0.0.1', port: 9000}, function(err, strac) {
-        strac.create('myroom', chatroom, function(err) { 
-            strac.get('myroom', function(err, room) {
-                room.on('join', function(person) { console.log("*", person, "joined"); });
-                room.on("msg", function(who, msg) { console.log("<" + who + ">", msg); });
-            });
+    var strac = stractory.client({host: '127.0.0.1', port: 9000});
+    strac.create('myroom', chatroom, function(err) { 
+        strac.get('myroom', function(err, room) {
+            room.on('join', function(person) { console.log("*", person, "joined"); });
+            room.on("msg", function(who, msg) { console.log("<" + who + ">", msg); });
         });
     });
 
@@ -276,17 +275,14 @@ Lets run another repl
 
 connect to the room and make some noise
 
-    var stractory = require('stractory');
+    var strac = require('stractory').client({host: '127.0.0.1', port: 9000});
 
-    stractory.client({host: '127.0.0.1', port: 9000}, function(err, strac) {
+    strac.get('myroom', function(err, room) {
         if (err) throw err;
-        strac.get('myroom', function(err, room) {
-            if (err) throw err;
-            room.join("Alex");
-            room.join("Bob");
-            room.msg("Alex", "Hello");
-            room.msg("Bob", "Hello back");
-        });
+        room.join("Alex");
+        room.join("Bob");
+        room.msg("Alex", "Hello");
+        room.msg("Bob", "Hello back");
     });
 
 You should get this in the first REPL:
@@ -316,7 +312,7 @@ Possible uses include audio and video stream encoders.
 
 If you don't need the callback functionality of dnode, (you only need
 to transmit simple JSON objects i.e. message passing), you can use stractory.eventemitter.
-The only benefit is that its 4 times faster than dnode
+The only benefit is that its upto 4 times faster than dnode
 
     var multicastEchoEmitter = stractory.eventemitter(function() {
         var clients = []; 
@@ -328,28 +324,17 @@ The only benefit is that its 4 times faster than dnode
         }   
     });
 
-    stractory.client(facadr, function(err, fac) {
-        fac.create('ee', multicastEchoEmitter, function(err) {
-            fac.connect('ee', function(err, ee) {
-                ee.recv.on('echo', function(msg) {
-                    console.log(msg);
-                });
-                ee.send.emit('echo', {hello: "world"});
+    strac.create('ee', multicastEchoEmitter, function(err) {
+        fac.get('ee', function(err, ee) {
+            ee.recv.on('echo', function(msg) {
+                console.log(msg);
             });
+            ee.send.emit('echo', {hello: "world"});
         });
     });
 
 
 # Roadmap (TODO)
-
-## Queuing client API:
-
-Queue stractory requests until a connection is established.
-
-    var strac = stractory.client({host:.., port:..});
-    
-    strac.connect('actorname', function(err, actor) {
-    });
    
 ## Binary stream multiplexer (?)
 
