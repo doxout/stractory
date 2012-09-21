@@ -57,7 +57,7 @@ With stractory we can move our existing code inside actors and keep on sharing
 memory, streams and event emitters. 
 
 Unlike redis, there is no single channel through which all messages pass. Instead
-there is a single registry (the stractory) which only assigns and keeps track which actor runs
+there is a single registry (the stractory). It assigns and keeps track which actor runs
 on which worker process. All other communication is between workers and client processes.  
 
 Finally, instead of giving separate jobs to separate processes we simply run generic workers
