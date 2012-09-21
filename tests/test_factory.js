@@ -121,30 +121,29 @@ var test_dnodes = function(test, dnode_tested) {
 
 
 exports.nonexistant_echo = function(test) {
-    test.expect(5);
+    test.expect(4);
     env.setup(function(facadr) {
-        stractory.client(facadr, function(err, fac) {
-            test.ok(!err, "stractory client err: " + err);            
-            fac.connect('nonexistant', function(err, i, o) {
-                test.ok(err, "connect nonexistant err: " + err); 
-            });
-            fac.create('echo', echoServer, function(err) {
-                if (err) console.error(err);
-                test.ok(!err, "create echo server err: " + err);
-                fac.connect('echo',  function(err, cli) {
-                    test.ok(!err, "connect echo server err:" + err);
-                    if (err) console.log(err);
-                    cli.write("Hello");
-                    cli.on('data', function(d) {
-                        test.ok(d == 'Hello', "echo server response is: " + d);
-                        env.teardown();
-                        test.done();
-                    });
-
+        var fac = stractory.client(facadr);
+        //test.ok(!err, "stractory client err: " + err);            
+        fac.connect('nonexistant', function(err, i, o) {
+            test.ok(err, "connect nonexistant err: " + err); 
+        });
+        fac.create('echo', echoServer, function(err) {
+            if (err) console.error(err);
+            test.ok(!err, "create echo server err: " + err);
+            fac.connect('echo',  function(err, cli) {
+                test.ok(!err, "connect echo server err:" + err);
+                if (err) console.log(err);
+                cli.write("Hello");
+                cli.on('data', function(d) {
+                    test.ok(d == 'Hello', "echo server response is: " + d);
+                    env.teardown();
+                    test.done();
                 });
 
             });
         });
+
     }, 1);
 };
 

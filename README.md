@@ -107,14 +107,13 @@ and modules will be looked up in path/to/working\_directory/node\_modules
 
 Connect to the stractory and create an actor:
 
-    var strac = stractory.client({host:ip, port:port}, function(strac) {
-        strac.create('named-actor', function() {
-            return function(client) {
-                client.on('data', function(d) {
-                    client.write(d);
-                });       
-            };
-        });
+    var strac = stractory.client({host:ip, port:port});
+    strac.create('named-actor', function() {
+        return function(client) {
+        client.on('data', function(d) {
+            client.write(d);
+            });       
+        };
     });
 
    
