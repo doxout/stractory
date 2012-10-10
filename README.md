@@ -19,16 +19,13 @@ Stream actors are basically lightweight services. They consist of:
 - an optional client that abstracts the protocol
 
 
-For example, [dnode](http://github.com/substack/dnode) is a type of a stream actor: 
-dnode actors consist of: 
+For example, [dnode](http://github.com/substack/dnode) is a type of a stream actor: dnode actors consist of: 
 - a server that provides RPC 
 - the client that abstracts the dnode protocol and is used to call RPC on the server
 
-Stractory can distribute these streaming actors to run on multiple worker processes
-on multiple machines.
+Stractory can distribute these streaming actors to run on multiple worker processes on multiple machines.
     
-When the stractory is asked to create a named actor, it will run the actor's server
-on a random worker from the pool. The name must be globally unique.
+When the stractory is asked to create a named actor, it will run the actor's server on a random worker from the pool. The name must be globally unique.
 
     mystractory.create("name", stractory.dnode(function() { 
         // the exported dnode functions
@@ -41,27 +38,17 @@ Afterwards we can ask the stractory to get us the named actor from any process
 
 # Why
 
-Writing node.js code is easy as long as we stick to a single process. However the moment 
-we need to scale beyond that, we may find ourselves needing to rewrite large chunks 
-of our code that unfortunately rely on memory, event emitters and streams 
-being available to all clients (e.g. socket.io). 
+Writing node.js code is easy as long as we stick to a single process. However the moment we need to scale beyond that, we may find ourselves needing to rewrite large chunks of our code that unfortunately rely on memory, event emitters and streams being available to all clients (e.g. socket.io). 
 
-To solve this problem we can use e.g. redis as a communication channel between processes. 
-However this might mean large changes in our code.
+To solve this problem we can use e.g. redis as a communication channel between processes. However this might mean large changes in our code.
 
-Another approach is to write a service for each task and run them on separate processes.
-However a single process doing one thing means we constantly need to calculate how many
-processes of what type we need to run on how many machines
+Another approach is to write a service for each task and run them on separate processes. However a single process doing one thing means we constantly need to calculate how many processes of what type we need to run on how many machines
 
-With stractory we can move our existing code inside actors and keep on sharing
-memory, streams and event emitters. 
+With stractory we can move our existing code inside actors and keep on sharing memory, streams and event emitters. 
 
-Unlike redis, there is no single channel through which all messages pass. Instead
-there is a single registry (the stractory). It assigns and keeps track which actor runs
-on which worker process. All other communication is between workers and client processes.  
+Unlike redis, there is no single channel through which all messages pass. Instead there is a single registry (the stractory). It assigns and keeps track which actor runs on which worker process. All other communication is between workers and client processes.  
 
-Finally, instead of giving separate jobs to separate processes we simply run generic workers
-and stractory will automatically spread our actors across all of them. 
+Finally, instead of giving separate jobs to separate processes we simply run generic workers and stractory will automatically spread our actors across all of them. 
 
 Some good actor examples:
 
@@ -95,8 +82,7 @@ You can also run workers from other machines
 
     stractory-workers --listen 9001,9002 --registry stractory_ip:9000
 
-By default, workers will load modules from `process.cwd()/node_modules`.
-You can specify a different working dir: 
+By default, workers will load modules from `process.cwd()/node_modules`. You can specify a different working dir: 
 
     stractory-workers --listen 9001,9002 --registry 9000 --workingDir path/to/working_directory
 
@@ -117,20 +103,16 @@ Connect to the stractory and create an actor:
     });
 
    
-The passed function is an actor server initialization function. It will run on a randomly 
-picked worker.  This function is not a closure; variables from the outside scope of this 
-function will be undefined when its run on the worker.
+The passed function is an actor server initialization function. It will run on a randomly picked worker.  This function is not a closure; variables from the outside scope of this function will be undefined when its run on the worker.
 
-The initialization function  should return a client handling function, like the one passed to 
-`net.createServer()`
+The initialization function  should return a client handling function, like the one passed to `net.createServer()`
 
 The previous command created a simple echo actor, and it could be written like so:
 
     var echo_actor = function() { return function(c) { c.pipe(c); }; };
     strac.create('mr-echo', echo_actor);    
 
-Asking the factory for the named actor will give you a new client connection to
-that actor:
+Asking the factory for the named actor will give you a new client connection to that actor:
 
     strac.connect('mr-echo', function(err, client) {
         client.write('Hello');
@@ -141,15 +123,11 @@ Or you can reuse an existing connection:
 
     strac.get('mr-echo', function(err, client) { client.write("hi"); });
 
-`get(name cb)` connects to the actor if required, otherwise returns the last cached client.
-This is faster and much more resource-friendly than creating a new connection every 
-time, but it might not work for some types of actors that require a new connection
-for every client or use. RPC clients like dnode will work fine.
+`get(name cb)` connects to the actor if required, otherwise returns the last cached client. This is faster and much more resource-friendly than creating a new connection every time, but it might not work for some types of actors that require a new connection for every client or use. RPC clients like dnode will work fine.
 
 # Complex actors
 
-Echo actors are boring, and you usually want to abstract streams to something
-higher-level to get message passing.
+Echo actors are boring, and you usually want to abstract streams to something higher-level to get message passing.
 
 To do this, specify an actor server, an actor client wrapper and options to pass to both.
 
@@ -167,8 +145,7 @@ Create a dnode-based actor:
 
 Notice how the options are passed to the server function.
 
-When a client wrapper is specified like in the dnode examples, using `strac.get` and `strac.connect`
-will yield the wrapped actor client instead:
+When a client wrapper is specified like in the dnode examples, using `strac.get` and `strac.connect` will yield the wrapped actor client instead:
 
     strac.get('name', function(err, client) {
         client.transform('beep', function(result) {
@@ -208,14 +185,9 @@ will yield the wrapped actor client instead:
 
 # Closure caveat
 
-The client wrapper and server functions are NOT closures. They will be transformed 
-to strings, and the server function will be eval-ed on the worker. If you want to 
-pass any variables to them, use the options object. All options must be non-functions 
-and serializable by dnode. (note that dnode does support cyclic objects)
+The client wrapper and server functions are NOT closures. They will be transformed to strings, and the server function will be eval-ed on the worker. If you want to pass any variables to them, use the options object. All options must be non-functions and serializable by dnode. (note that dnode does support cyclic objects)
 
-What this means is that you should treat actors as if they're separate modules.
-That means e.g. that you can't simply use the dnode variable if you've already required 
-it; it must be made available on the worker by calling
+What this means is that you should treat actors as if they're separate modules. That means e.g. that you can't simply use the dnode variable if you've already required it; it must be made available on the worker by calling
 
     var dnode = require('dnode');
 
@@ -227,8 +199,7 @@ The returned stractory client is an eventemitter and supports the following even
 
 ### error
    
-An error in the connection or dnode communication occured. You should
-probably re-estabilish a new client connection if you wish to continue, e.g.
+An error in the connection or dnode communication occured. You should probably re-estabilish a new client connection if you wish to continue, e.g.
     
     var errorHandler = function(err) { 
         console.log(err);
@@ -248,8 +219,7 @@ Connection to the stractory server was closed. See
 
 ### fail
 
-A dnode protocol communication error has occured. Usually the client can
-recover from this error.
+A dnode protocol communication error has occured. Usually the client can recover from this error.
 
 ### actor-timeout:
 
@@ -265,8 +235,7 @@ An error in the connection to the actor has occured
 
 ### actor-close
 
-Connection to the actor was closed. Addiional parameter indicates if the
-connection was closed because of an error.
+Connection to the actor was closed. Addiional parameter indicates if the connection was closed because of an error.
 
     strac.on('actor-close', function(actorName, actorConnetion, had_error) { });
 
@@ -348,8 +317,7 @@ You should get this in the first REPL:
 
 ## Spawn actor
 
-This is a child process spawn based actor with its stdin and stdout streams
-available for input/output:
+This is a child process spawn based actor with its stdin and stdout streams available for input/output:
 
     // a glorified 'multicast' echo server - spawn once and pipe to all clients 
     strac.create('custom-process', stractory.spawn('cat'), smart_client) 
@@ -360,9 +328,7 @@ Possible uses include audio and video stream encoders.
 
 ## Eventemitter actor:
 
-If you don't need the callback functionality of dnode, (you only need
-to transmit simple JSON objects i.e. message passing), you can use stractory.eventemitter.
-The only benefit is that its upto 4 times faster than dnode
+If you don't need the callback functionality of dnode, (you only need to transmit simple JSON objects i.e. message passing), you can use stractory.eventemitter. The only benefit is that its upto 4 times faster than dnode
 
     var multicastEchoEmitter = stractory.eventemitter(function() {
         var clients = []; 
@@ -388,10 +354,7 @@ The only benefit is that its upto 4 times faster than dnode
    
 ## Binary stream multiplexer (?)
 
-If instead of multiple connections a binary stream multiplexer
-is used, things like scaling to 100 000 actors might be possible,
-and stractory wouldn't be limited to < `ulimit -n` actor connections
-per process.
+If instead of multiple connections a binary stream multiplexer is used, things like scaling to 100 000 actors might be possible, and stractory wouldn't be limited to < `ulimit -n` actor connections per process.
 
 
 ## Other stractory client functions:
